@@ -716,10 +716,9 @@
         function checkDailyResetsAndDecay() {
             const today = getTodayStr();
             
-            if (localState.streak) {
+if (localState.streak) {
     const lastActive = localState.streak.lastActiveDate;
     if (lastActive) {
-        // Tarihleri saat farkından arındırıp gece yarısına sabitliyoruz
         const safeDate = (d) => new Date(d.includes('.') ? d.split('.').reverse().join('-') : d);
         const todayDate = safeDate(today);
         todayDate.setHours(0, 0, 0, 0);
@@ -727,25 +726,22 @@
         const lastActiveDate = safeDate(lastActive);
         lastActiveDate.setHours(0, 0, 0, 0);
         
-        // Aradaki net gün farkını hesaplıyoruz
         const diffTime = Math.abs(todayDate.getTime() - lastActiveDate.getTime());
         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         
-        // Eğer aradan 1 günden fazla (yani 2 gün veya daha fazla) geçmişse
         if (diffDays > 1) {
             if (localState.streak.shields > 0) {
                 localState.streak.shields--;
-                // Kalkan kullanıldığında seri 1 gün azalır (kaçırılan gün telafi edilir)
                 localState.streak.current = Math.max(0, localState.streak.current - (diffDays - 1));
                 writeLog("[SİSTEM] Kalkan kullanıldı, seri korundu.", "BİLGİ");
             } else {
-                // Kalkan yoksa seri acımasızca sıfırlanır
                 localState.streak.current = 0;
                 writeLog("[SİSTEM] Seri sıfırlandı.", "UYARI");
             }
         }
     }
 }
+            
                 if (lastActive !== today && localState.streak.dailyCompleted) {
                      localState.streak.dailyCompleted = false;
                 }
