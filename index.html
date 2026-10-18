@@ -798,9 +798,7 @@ if (localState.streak) {
                     
                     localState.lastDecayApplied = today;
                 }
-            }
-        }
-
+      
         function increaseStat(cat, amount) {
             if (!localState.stats) localState.stats = { LRN: 0, HLT: 0, MNT: 0, FIN: 0, PRO: 0, SOC: 0 };
             if (!localState.statLastActive) localState.statLastActive = { LRN: getTodayStr(), HLT: getTodayStr(), MNT: getTodayStr(), FIN: getTodayStr(), PRO: getTodayStr(), SOC: getTodayStr() };
