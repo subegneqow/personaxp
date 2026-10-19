@@ -807,16 +807,46 @@ if (localState.streak) {
             localState.statLastActive[cat] = getTodayStr(); 
         }
 
-        function recordStreakAction() {
-            if (!localState.streak) localState.streak = { current: 0, lastActiveDate: "", dailyCompleted: false, shields: 1 };
-            const today = getTodayStr();
+      function recordStreakAction() {
+    if (!localState.streak) localState.streak = { current: 0, lastActiveDate: "", dailyCompleted: false, shields: 1 };
+    const today = getTodayStr();
+
+    if (localState.streak.lastActiveDate !== today) {
+        const lastActive = localState.streak.lastActiveDate;
+        
+        if (lastActive) {
+            const safeDate = (d) => new Date(d.includes('.') ? d.split('.').reverse().join('-') : d);
+            const todayDate = safeDate(today);
+            todayDate.setHours(0, 0, 0, 0);
             
-            if (localState.streak.lastActiveDate !== today) {
-                localState.streak.current++;
-                localState.streak.lastActiveDate = today;
-                localState.streak.dailyCompleted = true; 
-                triggerAlert(`🔥 SERİ KORUNDU! Güncel Seri: ${localState.streak.current} Gün`);
+            const lastActiveDate = safeDate(lastActive);
+            lastActiveDate.setHours(0, 0, 0, 0);
+            
+            const diffTime = Math.abs(todayDate.getTime() - lastActiveDate.getTime());
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1) {
+                if (localState.streak.shields > 0) {
+                    localState.streak.shields--;
+                    localState.streak.current = Math.max(0, localState.streak.current - (diffDays - 1));
+                    writeLog("[SİSTEM] Kalkan kullanıldı, seri korundu.", "BİLGİ");
+                } else {
+                    localState.streak.current = 0;
+                    writeLog("[SİSTEM] Seri sıfırlandı.", "UYARI");
+                }
             }
+        }
+        localState.streak.dailyCompleted = false;
+    }
+
+    if (!localState.streak.dailyCompleted) {
+        localState.streak.current++;
+        localState.streak.lastActiveDate = today;
+        localState.streak.dailyCompleted = true;
+        if (typeof updateStreakUI === "function") updateStreakUI();
+        saveLocalState();
+    }
+}
         }
         
         loadLocalVault();
