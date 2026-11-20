@@ -1234,6 +1234,7 @@
         let treeLayoutCache = null;
         let treeFull = null;
         const treeExpanded = new Set();  // kilitli yetenekleri açılmış alanlar
+        const treeCollapsed = (() => { try { return new Set(JSON.parse(localStorage.getItem('personaxp_tree_collapsed') || '[]')); } catch (e) { return new Set(); } })(); // dalları kapatılmış alanlar
         let treeShowLinks = false;       // tüm pasif bağlantıları göster
         window.toggleTreeLinks = () => { treeShowLinks = !treeShowLinks; playSynthSound('click'); renderOrganicTree(); };
         const ROOT_COLORS = { LRN: '#4f8ff7', MNT: '#06b6d4', HLT: '#22c55e', FIN: '#f59e0b', SOC: '#ec4899', PRO: '#a78bfa' };
@@ -1243,6 +1244,7 @@
         function leavesUnder(id) { const k = childrenOf(id); return k.length ? k.flatMap(c => leavesUnder(c.id)) : [id]; }
         // Bir alanın haritada görünen yetenekleri: XP'si olanlar (+seçili), açılmışsa hepsi; gizli varsa "+N"
         function visibleLeaves(rootId) {
+            if (treeCollapsed.has(rootId)) return [];
             const all = leavesUnder(rootId).filter(id => id !== rootId);
             const show = treeExpanded.has(rootId) ? all : all.filter(id => totalXp(id) > 0 || id === treeSelected);
             const hidden = all.length - show.length;
@@ -1366,7 +1368,7 @@
                     <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${isLit ? (p.depth === 1 ? '#0b1a14' : col) : '#0d1512'}" stroke="${isSel || related ? '#f59e0b' : isLit ? col : '#24302b'}" stroke-width="${isSel ? 4 : related ? 3 : p.depth === 1 ? 3 : 2}"/>
                     <text x="${p.x}" y="${p.y + r * 0.36}" font-size="${r * 0.95}" text-anchor="middle" opacity="${isLit ? 1 : 0.4}">${esc(n.icon)}</text>
                     ${p.depth === 1
-                        ? `<text x="${p.x}" y="${p.y + r + 18}" font-size="15" font-weight="800" fill="${isLit ? col : '#4a5f57'}" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="5">${esc(n.name)}${isLit ? ' ' + Lv.lvl : ''}</text>`
+                        ? `<text x="${p.x}" y="${p.y + r + 18}" font-size="15" font-weight="800" fill="${isLit ? col : '#4a5f57'}" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="5">${esc(n.name)}${isLit ? ' ' + Lv.lvl : ''}${treeCollapsed.has(id) ? ' ▸' : ''}</text>${treeCollapsed.has(id) && leavesUnder(id).filter(x => x !== id && totalXp(x) > 0).length ? `<text x="${p.x}" y="${p.y + r + 34}" font-size="11" fill="#6b8078" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${leavesUnder(id).filter(x => x !== id && totalXp(x) > 0).length} yetenek kapalı</text>` : ''}`
                         : `<text x="${L.x}" y="${L.y}" font-size="13" font-weight="600" fill="${isSel ? '#f59e0b' : isLit ? '#e5fff5' : '#6b8078'}" text-anchor="${L.anchor}" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${esc(nm)}${isLit ? ' · ' + Lv.lvl : ''}</text>`}
                 </g>`;
             }
@@ -1535,6 +1537,14 @@
         }
 
         window.selectTreeNode = (id) => {
+            const nd = tree().nodes[id];
+            if (nd && !nd.parent) { // ana alana dokunmak: alt yeteneklerini aç/kapat
+                treeCollapsed.has(id) ? treeCollapsed.delete(id) : treeCollapsed.add(id);
+                try { localStorage.setItem('personaxp_tree_collapsed', JSON.stringify([...treeCollapsed])); } catch (e) {}
+                if (treeSelected && rootOf(treeSelected) === id) treeSelected = null;
+                treeSelected = id;
+                playSynthSound('click'); renderOrganicTree(); renderNodeInfo(); return;
+            }
             if (isMoreId(id)) { const par = id.slice(8); treeExpanded.has(par) ? treeExpanded.delete(par) : treeExpanded.add(par); playSynthSound('click'); renderOrganicTree(); return; }
             treeSelected = treeSelected === id ? null : id; playSynthSound('click'); renderOrganicTree(); renderNodeInfo(); if (treeSelected) document.getElementById('tree-node-info')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
 
