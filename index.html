@@ -1312,8 +1312,9 @@
                     <text x="${p.x}" y="${ly + (p.depth === 1 ? 19 : 16)}" font-size="${p.depth === 1 ? 14 : 12}" fill="${isLit ? '#00ff9f' : '#4a5f57'}" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${isLit ? 'Lv ' + L.lvl : 'kilitli'}</text>
                 </g>`;
             }
-            const L = skillLevel(allXp);
-            const trunkLabel = `<text x="${FORK.x}" y="${TRUNK_BASE.y - 8}" font-size="16" fill="#00ff9f" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" paint-order="stroke" stroke="#050a08" stroke-width="5">${esc(localState.customName || 'ALP').toUpperCase()} · Lv ${L.lvl}</text>`;
+            // Gövdede profildeki ana seviye gösterilir (yetenek seviyeleri ayrı)
+            const mainLvl = calculateLevelDetails(localState.xp || 0).level;
+            const trunkLabel = `<text x="${FORK.x}" y="${TRUNK_BASE.y - 8}" font-size="16" fill="#00ff9f" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" paint-order="stroke" stroke="#050a08" stroke-width="5">${esc(localState.customName || 'ALP').toUpperCase()} · LVL ${mainLvl}</text>`;
 
             wrap.innerHTML = `<svg id="tree-svg" viewBox="${treeView.x} ${treeView.y} ${treeView.w} ${treeView.h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;touch-action:none">${branches}${links}${nodes}${trunkLabel}</svg>`;
             attachTreeGestures();
