@@ -3452,6 +3452,20 @@ Kurallar:
             if (creatorHome) creatorHome.insertBefore(creatorCard, creatorNext);
         }
         document.getElementById('fab-add').onclick = openAddSheet;
+        // iOS: klavye kapandıktan sonra sabit alt menü ekranın ortasında kalabiliyor → gerçek görünür alana göre hizala
+        (function pinBottomBars() {
+            const vv = window.visualViewport; if (!vv) return;
+            const bars = ['bottom-nav', 'fab-add'].map(id => document.getElementById(id)).filter(Boolean);
+            const fix = () => {
+                const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+                const gap = typing ? 0 : Math.round(vv.height + vv.offsetTop - window.innerHeight);
+                bars.forEach(el => el.style.transform = gap > 0 ? `translateY(${gap}px)` : '');
+            };
+            vv.addEventListener('resize', fix); vv.addEventListener('scroll', fix);
+            window.addEventListener('scroll', fix, { passive: true });
+            document.addEventListener('focusout', () => setTimeout(() => { window.scrollTo(window.scrollX, window.scrollY); fix(); }, 300));
+            fix();
+        })();
         document.getElementById('add-sheet-bg').onclick = closeAddSheet;
         document.querySelectorAll('.sheet-tab').forEach(b => b.onclick = () => setSheetTab(b.dataset.sheet));
         document.getElementById('manual-text')?.addEventListener('input', previewSkillGuess);
