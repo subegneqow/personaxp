@@ -2933,7 +2933,7 @@ Kurallar:
             } else {
                 box.innerHTML = coachMessages.map(m => m.role === 'user'
                     ? `<div class="flex justify-end"><div class="max-w-[85%] bg-[#00ff9f]/10 border border-[#00ff9f]/30 text-[#c8ffe9] rounded px-3 py-2 text-xs">${esc(m.text)}</div></div>`
-                    : `<div class="flex justify-start"><div class="max-w-[90%] ${m.error ? 'bg-red-950/30 border-red-500/40 text-red-200' : 'bg-[#0a1814] border-[#00ff9f]/15 text-gray-200'} border rounded px-3 py-2 text-xs leading-relaxed">${m.text ? coachFormat(m.text) : '<span class="animate-pulse text-[#00ff9f]">düşünüyor…</span>'}</div></div>`
+                    : `<div class="flex justify-start"><div class="max-w-[90%] ${m.error ? 'bg-red-950/30 border-red-500/40 text-red-200' : 'bg-[#0a1814] border-[#00ff9f]/15 text-gray-200'} border rounded px-3 py-2 text-xs leading-relaxed">${m.text ? coachFormat(m.text) : `<span class="animate-pulse text-[#00ff9f]">${esc(m.status || 'düşünüyor…')}</span> <span class="coach-timer text-gray-500 font-mono"></span>`}</div></div>`
                 ).join('');
             }
             box.scrollTop = box.scrollHeight;
@@ -2945,6 +2945,7 @@ Kurallar:
             if (/429|quota|resource.?exhausted|rate/i.test(msg)) return "Ücretsiz kullanım sınırı doldu. Biraz bekleyip tekrar dene (günlük sınır gece sıfırlanır).";
             if (/403|permission|api.*not.*enabled|has not been used/i.test(msg)) return "Firebase'de AI Logic izni yok gibi görünüyor. Hata: " + msg.slice(0, 160);
             if (/failed to fetch|network/i.test(msg)) return "İnternet bağlantısı yok ya da sunucuya ulaşılamadı.";
+            if (/COACH_TIMEOUT/.test(msg)) return "Koç 30 saniyede cevap veremedi. Biraz sonra tekrar dene.";
             return "Bir hata oldu: " + msg.slice(0, 200);
         }
 
@@ -2952,6 +2953,8 @@ Kurallar:
             text = (text || '').trim();
             if (!text || coachBusy) return;
             coachBusy = true;
+            const t0 = Date.now();
+            const timerI = setInterval(() => { const el = document.querySelector('#coach-messages .coach-timer'); if (el) el.textContent = Math.round((Date.now() - t0) / 1000) + ' sn'; }, 500);
             coachMessages.push({ role: 'user', text });
             const reply = { role: 'model', text: '' };
             coachMessages.push(reply);
@@ -2962,17 +2965,25 @@ Kurallar:
                 for (let attempt = 0; attempt < COACH_MODELS.length; attempt++) {
                     try {
                         startCoachChat();
-                        const res = await coachChat.sendMessageStream(text);
-                        for await (const chunk of res.stream) {
-                            reply.text += chunk.text();
-                            renderCoach();
-                        }
+                        // 30 sn içinde ilk kelime gelmezse daha hızlı modele geç
+                        let firstChunk = false;
+                        const timeout = new Promise((_, rej) => setTimeout(() => { if (!firstChunk) rej(new Error('COACH_TIMEOUT')); }, 30000));
+                        const run = (async () => {
+                            const res = await coachChat.sendMessageStream(text);
+                            for await (const chunk of res.stream) {
+                                firstChunk = true;
+                                reply.text += chunk.text();
+                                renderCoach();
+                            }
+                        })();
+                        await Promise.race([run, timeout]);
+                        await run;
                         lastErr = null;
                         break;
                     } catch (e) {
                         lastErr = e;
                         // model bulunamadıysa sıradaki modeli dene
-                        if (/404|not.?found|not supported|is not available/i.test(String(e?.message || e)) && coachModelIdx < COACH_MODELS.length - 1) { coachModelIdx++; reply.text = ''; continue; }
+                        if (/COACH_TIMEOUT|404|not.?found|not supported|is not available/i.test(String(e?.message || e)) && coachModelIdx < COACH_MODELS.length - 1) { coachModelIdx++; reply.text = ''; reply.status = 'Daha hızlı modele geçiliyor…'; renderCoach(); continue; }
                         break;
                     }
                 }
@@ -2983,6 +2994,8 @@ Kurallar:
                 reply.text = coachErrorText(e);
                 reply.error = true;
             }
+            clearInterval(timerI);
+            delete reply.status;
             coachBusy = false;
             saveCoachMessages();
             renderCoach();
