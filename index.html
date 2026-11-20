@@ -2828,7 +2828,7 @@
         });
 
         // ================== AI KOÇ (Gemini, Firebase AI Logic) ==================
-        // reCAPTCHA v3 site anahtarı (App Check). Herkese açık olması normaldir; gizli anahtar Firebase konsolunda durur.
+        // Fraud Defense (reCAPTCHA Enterprise) web anahtarı (App Check). Herkese açık olması normaldir.
         const RECAPTCHA_SITE_KEY = "";
         const COACH_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
         const COACH_CHAT_KEY = "personaxp_coach_chat_v1";
@@ -2890,7 +2890,7 @@ Kurallar:
             if (RECAPTCHA_SITE_KEY) {
                 try {
                     const ac = await import("https://www.gstatic.com/firebasejs/12.5.0/firebase-app-check.js");
-                    ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true });
+                    ac.initializeAppCheck(app, { provider: new ac.ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true });
                 } catch (e) { console.warn("App Check başlatılamadı", e); }
             }
             coachAI = { mod: aiMod, ai: aiMod.getAI(app, { backend: new aiMod.GoogleAIBackend() }) };
