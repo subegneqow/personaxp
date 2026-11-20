@@ -1295,8 +1295,16 @@
             svg.onpointercancel = end;
             svg.onwheel = (e) => {
                 e.preventDefault();
+                // Trackpad: iki parmak kaydırma = gezinme; sıkıştırma (ctrlKey) veya fare tekerleği + Ctrl/Cmd = yakınlaştırma
+                if (!e.ctrlKey && !e.metaKey) {
+                    const s = toSvg(0, 0).s;
+                    treeView.x += e.deltaX * s; treeView.y += e.deltaY * s;
+                    apply();
+                    return;
+                }
                 const p = toSvg(e.clientX, e.clientY);
-                const nw = clampZoom(treeView.w * (e.deltaY > 0 ? 1.15 : 1 / 1.15)), k = nw / treeView.w;
+                const factor = Math.exp(Math.max(-0.5, Math.min(0.5, e.deltaY * 0.01)));
+                const nw = clampZoom(treeView.w * factor), k = nw / treeView.w;
                 treeView = { x: p.x - (p.x - treeView.x) * k, y: p.y - (p.y - treeView.y) * k, w: nw, h: treeView.h * k };
                 apply();
                 clearTimeout(svg._wt); svg._wt = setTimeout(renderOrganicTree, 200);
@@ -1337,7 +1345,7 @@
                             <div class="text-[#00ff9f]">━ büyüyen dal</div><div class="text-amber-400">┅ pasif katkı</div>
                         </div>
                     </div>
-                    <div class="text-[9px] text-gray-500 font-mono mt-1">Sürükle: kaydır · İki parmak / tekerlek: yakınlaştır · Dokun: detay</div>
+                    <div class="text-[9px] text-gray-500 font-mono mt-1">Sürükle veya iki parmakla kaydır · Sıkıştır (pinch) ya da ＋/－ ile yakınlaştır · Dokun: detay</div>
                     <button onclick="window.addRootBranch()" class="w-full mt-2 border border-dashed border-[#00ff9f]/30 text-[#00ff9f]/70 hover:text-[#00ff9f] rounded p-2 text-xs font-bold">＋ YENİ ANA DAL</button>`;
             }
             renderOrganicTree();
