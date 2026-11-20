@@ -58,6 +58,37 @@
             0% { top: -10%; } 
             100% { top: 110%; } 
         }
+        /* ---- Arayüz yenilemesi ---- */
+        /* Parlamaları yumuşat (başlıkların arkasındaki koyu kutular kalksın) */
+        .glow-green, .glow-cyan, .glow-gold, .glow-red { box-shadow: none !important; text-shadow: 0 0 6px rgba(0, 255, 159, 0.18) !important; background: transparent !important; }
+        /* Okunabilirlik: çok küçük yazıları büyüt */
+        .text-\[7px\], .text-\[8px\] { font-size: 10px !important; }
+        .text-\[9px\] { font-size: 10.5px !important; }
+        .text-\[10px\] { font-size: 11px !important; }
+        /* Masaüstü: takvim, ağaç ve koç tam genişlik */
+        @media (min-width: 768px) {
+            body[data-tab="calendar"] #left-col, body[data-tab="tree"] #left-col, body[data-tab="coach"] #left-col { display: none; }
+            body[data-tab="calendar"] #right-col, body[data-tab="tree"] #right-col, body[data-tab="coach"] #right-col { grid-column: span 12 / span 12; }
+        }
+        /* Telefon: altta sabit menü, her sekme kendi ekranı */
+        @media (max-width: 767px) {
+            #tab-nav { display: none; }
+            body { padding-bottom: 84px !important; }
+            body[data-tab="home"] #right-col { display: none; }
+            body:not([data-tab="home"]) #left-col, body:not([data-tab="home"]) #income-wrap { display: none; }
+            main { gap: 1rem !important; }
+        }
+        /* Takvim (Google Takvim tarzı) */
+        .cal-cell { min-height: 108px; }
+        .cal-chip { background: color-mix(in srgb, var(--c) 22%, transparent); border-left: 3px solid var(--c); border-radius: 4px; padding: 1px 4px; font-size: 11px; line-height: 1.35; color: #e8fff5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cal-chip b { color: color-mix(in srgb, var(--c) 70%, white); font-weight: 700; }
+        .cal-block { position: absolute; z-index: 10; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-radius: 5px; padding: 3px 5px; font-size: 11px; line-height: 1.3; color: #fff; background: color-mix(in srgb, var(--c) 55%, #07110e); border-left: 3px solid var(--c); }
+        @media (max-width: 639px) {
+            .cal-cell { min-height: 72px; padding: 2px; }
+            #cal-month-view .cal-chip { height: 5px; padding: 0; border-left: 0; background: var(--c); }
+            #cal-month-view .cal-chip-text { display: none; }
+            .cal-block { font-size: 10px; padding: 1px 3px; }
+        }
         /* iPhone: dokunmatik ekranda hover yok, gizli sil butonlarını görünür yap */
         @media (hover: none) {
             .group .opacity-0 { opacity: 1 !important; }
@@ -73,7 +104,7 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 159, 0.5); }
     </style>
 </head>
-<body class="antialiased relative min-h-screen pb-12 select-none">
+<body class="antialiased relative min-h-screen pb-12 select-none" data-tab="tasks">
     <div class="crt-overlay"></div>
     <div class="scanline"></div>
 
@@ -108,7 +139,7 @@
         </div>
     </header>
 
-    <section class="max-w-5xl mx-auto px-4 mt-4 relative z-10">
+    <section id="income-wrap" class="max-w-5xl mx-auto px-4 mt-4 relative z-10">
         <div class="bg-[#07110e] border border-emerald-500/30 rounded p-4 relative overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col md:flex-row items-stretch justify-between gap-4">
             <div class="space-y-1 flex-1 flex flex-col justify-between">
                 <div>
@@ -167,7 +198,7 @@
 
     <main class="p-4 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 mt-2 relative z-10">
         
-        <div class="md:col-span-5 space-y-6">
+        <div id="left-col" class="md:col-span-5 space-y-6">
             
             <div id="profile-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-2 text-[10px] text-gray-500 font-bold">GELİŞİM PROTOKOLÜ</div>
@@ -331,9 +362,9 @@
 
         </div>
 
-        <div class="md:col-span-7 space-y-6">
+        <div id="right-col" class="md:col-span-7 space-y-6">
             
-            <div class="flex border-b border-[#00ff9f]/20 bg-[#07110e] p-1 rounded-t overflow-x-auto">
+            <div id="tab-nav" class="flex border-b border-[#00ff9f]/20 bg-[#07110e] p-1 rounded-t overflow-x-auto">
                 <button id="nav-tasks" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-[#00ff9f] border-b-2 border-[#00ff9f] transition-all duration-300 whitespace-nowrap">🎯 GÖREVLER</button>
                 <button id="nav-history" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">📜 GEÇMİŞ</button>
                 <button id="nav-calendar" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🗓️ TAKVİM</button>
@@ -459,35 +490,33 @@
             </div>
 
             <div id="section-calendar" class="hidden">
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                    
-                    <div class="xl:col-span-7 bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 flex flex-col space-y-4 shadow-[0_0_15px_rgba(0,255,159,0.05)]">
-                        <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-4">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xl">🗓️</span>
-                                <h3 class="text-xs sm:text-sm text-[#00ff9f] font-bold uppercase tracking-wider glow-green">SİBER AJANDA & TAKVİM GEZGİNİ</h3>
+                <div class="grid grid-cols-1 gap-4">
+
+                    <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded-lg p-3 sm:p-4 flex flex-col gap-3">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <div class="flex items-center gap-1.5">
+                                <button id="cal-today-btn" class="px-3 h-8 border border-[#00ff9f]/40 text-[#00ff9f] text-xs font-bold rounded-full hover:bg-[#00ff9f]/10">Bugün</button>
+                                <button id="cal-prev-btn" class="w-8 h-8 text-[#00ff9f] text-sm font-bold rounded-full hover:bg-[#00ff9f]/10" aria-label="Önceki">◀</button>
+                                <button id="cal-next-btn" class="w-8 h-8 text-[#00ff9f] text-sm font-bold rounded-full hover:bg-[#00ff9f]/10" aria-label="Sonraki">▶</button>
+                                <span id="current-month-display" class="text-sm sm:text-base font-bold text-white ml-1">KASIM 2026</span>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <button id="cal-prev-btn" class="px-3 py-1.5 bg-[#0a1814] border border-[#00ff9f]/30 hover:bg-[#00ff9f] hover:text-black text-[#00ff9f] text-sm font-bold rounded transition-all">◀</button>
-                                <span id="current-month-display" class="text-xs sm:text-sm font-extrabold text-white font-mono min-w-[110px] text-center">EKİM 2026</span>
-                                <button id="cal-next-btn" class="px-3 py-1.5 bg-[#0a1814] border border-[#00ff9f]/30 hover:bg-[#00ff9f] hover:text-black text-[#00ff9f] text-sm font-bold rounded transition-all">▶</button>
+                            <div class="flex bg-[#050a08] border border-[#00ff9f]/20 rounded-full p-0.5 text-xs font-bold">
+                                <button data-calview="month" class="cal-view-btn px-3 h-7 rounded-full">Ay</button>
+                                <button data-calview="week" class="cal-view-btn px-3 h-7 rounded-full">Hafta</button>
+                                <button data-calview="day" class="cal-view-btn px-3 h-7 rounded-full">Gün</button>
                             </div>
                         </div>
-                        
-                        <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs font-bold mb-2">
-                            <div class="text-red-400/80">PZT</div>
-                            <div class="text-gray-400">SAL</div>
-                            <div class="text-gray-400">ÇAR</div>
-                            <div class="text-gray-400">PER</div>
-                            <div class="text-gray-400">CUM</div>
-                            <div class="text-[#00ff9f]/70">CMT</div>
-                            <div class="text-[#00ff9f]/70">PAZ</div>
+                        <div id="cal-month-view">
+                            <div class="grid grid-cols-7 text-center text-[11px] font-bold text-gray-400 border-b border-[#00ff9f]/10 pb-1.5">
+                                <div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div class="text-[#00ff9f]/70">Cmt</div><div class="text-[#00ff9f]/70">Paz</div>
+                            </div>
+                            <div id="calendar-days-grid" class="grid grid-cols-7 border-l border-[#00ff9f]/10"></div>
                         </div>
-                        
-                        <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 sm:gap-2"></div>
+                        <div id="cal-time-view" class="hidden"></div>
+                        <div id="cal-legend" class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-400"></div>
                     </div>
 
-                    <div class="xl:col-span-5 bg-[#0a1814] border border-[#00ff9f]/20 rounded p-5 flex flex-col space-y-4 shadow-[0_0_15px_rgba(0,255,159,0.05)] h-[600px] xl:h-auto">
+                    <div class="bg-[#0a1814] border border-[#00ff9f]/20 rounded-lg p-4 flex flex-col space-y-4">
                         <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3 shrink-0 flex-wrap gap-2">
                             <div class="flex items-center space-x-2">
                                 <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">SEÇİLEN GÜN:</span>
@@ -499,7 +528,7 @@
                         <div class="flex-1 flex flex-col space-y-4 overflow-hidden">
                             <div class="flex-1 flex flex-col min-h-[150px]">
                                 <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-3 shrink-0">⏳ OTOMATİK ZAMAN TÜNELİ</span>
-                                <div id="timeline-container" class="flex-1 overflow-y-auto pl-4 border-l-2 border-[#00ff9f]/30 pr-2 space-y-3"></div>
+                                <div id="timeline-container" class="flex-1 overflow-y-auto pl-4 border-l-2 border-[#00ff9f]/30 pr-2 space-y-3 max-h-80"></div>
                             </div>
                             
                             <div class="shrink-0 flex flex-col space-y-3 pt-4 border-t border-[#00ff9f]/10">
@@ -509,7 +538,7 @@
                                     </label>
                                     <span id="note-saved-status" class="text-[10px] text-emerald-400 hidden font-bold">KAYDEDİLDİ ✔</span>
                                 </div>
-                                <textarea id="day-note-input" placeholder="Google Takvim stili geniş not alanı... Bugün neler oldu? Müşteri notları, aklına gelen fikirler veya günün kapanış özeti..." class="w-full h-32 md:h-48 xl:h-56 bg-[#050a08] border border-[#00ff9f]/20 text-white rounded p-3 text-xs md:text-sm focus:ring-1 focus:ring-[#00ff9f] resize-none leading-relaxed transition-colors shadow-inner"></textarea>
+                                <textarea id="day-note-input" placeholder="Google Takvim stili geniş not alanı... Bugün neler oldu? Müşteri notları, aklına gelen fikirler veya günün kapanış özeti..." class="w-full h-28 md:h-36 bg-[#050a08] border border-[#00ff9f]/20 text-white rounded p-3 text-xs md:text-sm focus:ring-1 focus:ring-[#00ff9f] resize-none leading-relaxed transition-colors shadow-inner"></textarea>
                                 <button id="save-day-note-btn" class="w-full py-3 bg-[#00ff9f]/10 hover:bg-[#00ff9f] border border-[#00ff9f]/40 hover:text-black text-[#00ff9f] font-extrabold text-xs uppercase transition-all rounded">GÜNLÜK NOTU KAYDET</button>
                             </div>
                         </div>
@@ -558,6 +587,15 @@
 
         </div>
     </main>
+
+    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#050a08]/95 backdrop-blur border-t border-[#00ff9f]/20 grid grid-cols-6" style="padding-bottom: env(safe-area-inset-bottom)">
+        <button data-bn="home" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🏠</span><span class="text-[10px] font-bold">Ana</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="tasks" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🎯</span><span class="text-[10px] font-bold">Görev</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="history" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">📜</span><span class="text-[10px] font-bold">Geçmiş</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="calendar" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🗓️</span><span class="text-[10px] font-bold">Takvim</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="tree" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🌳</span><span class="text-[10px] font-bold">Ağaç</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="coach" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🧭</span><span class="text-[10px] font-bold">Koç</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+    </nav>
 
     <!-- Modals -->
     <div id="checkin-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -2545,80 +2583,191 @@
             updateDashboardUI();
         };
 
+        // ================== TAKVİM (Google Takvim tarzı: Ay / Hafta / Gün) ==================
         let calViewingDate = new Date();
         let selectedCalendarDateStr = getTodayStr();
+        let calView = (() => { try { return localStorage.getItem('personaxp_cal_view') || 'month'; } catch (e) { return 'month'; } })();
+        const CAT_COLORS = { LRN: '#4f8ff7', PRO: '#a78bfa', HLT: '#22c55e', MNT: '#06b6d4', FIN: '#f59e0b', SOC: '#ec4899' };
+        const CAT_NAMES = { LRN: 'Öğrenme', PRO: 'Üretkenlik', HLT: 'Sağlık', MNT: 'Zihin', FIN: 'Finans', SOC: 'Sosyal' };
+        const DAY_SHORT = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+        const HOUR_H = 44;
+
+        function cleanLogTitle(t) {
+            return String(t || '').replace(/^\[(RUTİN|GÖREV|SİSTEM)\]\s*/i, '').replace(/^💰 Gelir Eklendi:\s*/, '💰 ');
+        }
+        function dayEvents(dateStr) {
+            const ev = [];
+            for (const l of (localState.actionLogs || [])) {
+                if (l.dateStr !== dateStr || l.xp === undefined || l.xp === null || isNaN(l.xp)) continue;
+                const m = /^(\d{1,2}):(\d{2})/.exec(l.timeStr || '');
+                const sk = l.skillId && tree()?.nodes[l.skillId];
+                ev.push({
+                    title: (sk ? sk.icon + ' ' : '') + cleanLogTitle(l.text),
+                    time: m ? `${m[1].padStart(2, '0')}:${m[2]}` : null,
+                    min: m ? parseInt(m[1]) * 60 + parseInt(m[2]) : null,
+                    color: CAT_COLORS[l.cat] || '#94a3b8', xp: l.xp
+                });
+            }
+            ev.sort((a, b) => (a.min ?? -1) - (b.min ?? -1));
+            const allDay = (localState.deadlines || []).filter(d => d.date === dateStr).map(d => ({ title: '🎯 ' + d.title, color: '#ef4444', allDay: true }));
+            return { timed: ev.filter(e => e.min !== null), untimed: ev.filter(e => e.min === null), allDay, note: !!(localState.dayNotes || {})[dateStr] };
+        }
+        function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+        function isNarrow() { return window.innerWidth < 640; }
 
         function renderCalendar() {
-            const year = calViewingDate.getFullYear();
-            const month = calViewingDate.getMonth();
-            document.getElementById('current-month-display').innerText = `${monthNames[month]} ${year}`;
-
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const startingCol = (firstDayIndex + 6) % 7; 
-            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-
-            const grid = document.getElementById('calendar-days-grid');
-            grid.innerHTML = '';
-
-            for (let i = 0; i < startingCol; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = "p-2 bg-[#050a08]/40 border border-gray-900 rounded opacity-20 aspect-square";
-                grid.appendChild(emptyCell);
-            }
-
-            const todayStr = getTodayStr();
-
-            for (let day = 1; day <= totalDaysInMonth; day++) {
-                const dayPadded = String(day).padStart(2, '0');
-                const monthPadded = String(month + 1).padStart(2, '0');
-                const cellDateStr = `${year}-${monthPadded}-${dayPadded}`;
-
-                const dayLogs = (localState.actionLogs || []).filter(l => l.dateStr === cellDateStr && l.xp !== undefined && l.xp !== null && !isNaN(l.xp));
-                const dayNote = localState.dayNotes?.[cellDateStr];
-                const hasActivity = dayLogs.length > 0 || dayNote;
-                
-                const isSelected = (cellDateStr === selectedCalendarDateStr);
-                const isToday = (cellDateStr === todayStr);
-
-                const cell = document.createElement('button');
-                cell.className = `p-1 sm:p-2 rounded text-left font-mono text-[9px] sm:text-xs flex flex-col justify-between aspect-square transition-all relative ${
-                    isSelected 
-                        ? 'bg-[#00ff9f]/20 border-2 border-[#00ff9f] text-white font-extrabold glow-green scale-[1.05] z-10 shadow-lg' 
-                        : isToday 
-                            ? 'bg-[#0a1814] border border-[#00ff9f]/50 text-[#00ff9f] font-bold hover:border-[#00ff9f] hover:bg-[#00ff9f]/5' 
-                            : 'bg-[#0a1814] border border-[#00ff9f]/10 text-gray-300 hover:border-[#00ff9f]/40 hover:bg-[#00ff9f]/5'
-                }`;
-
-                cell.innerHTML = `
-                    <span class="block text-right w-full">${day}</span>
-                    <div class="flex flex-col items-center justify-end h-full w-full pt-1">
-                        ${hasActivity ? `<span class="px-1 py-0.5 bg-[#00ff9f]/20 text-[#00ff9f] text-[7px] sm:text-[8px] rounded border border-[#00ff9f]/30 max-w-full truncate overflow-hidden">⚡${dayLogs.length}</span>` : `<span class="h-3"></span>`}
-                    </div>
-                `;
-
-                cell.onclick = () => {
-                    selectedCalendarDateStr = cellDateStr;
-                    playSynthSound('click');
-                    renderCalendar();
-                };
-
-                grid.appendChild(cell);
-            }
-
+            document.querySelectorAll('.cal-view-btn').forEach(b => {
+                const on = b.dataset.calview === calView;
+                b.className = `cal-view-btn px-3 h-7 rounded-full ${on ? 'bg-[#00ff9f] text-black' : 'text-gray-400 hover:text-white'}`;
+            });
+            document.getElementById('cal-month-view').classList.toggle('hidden', calView !== 'month');
+            document.getElementById('cal-time-view').classList.toggle('hidden', calView === 'month');
+            document.getElementById('cal-legend').innerHTML = Object.entries(CAT_NAMES).map(([k, v]) => `<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:${CAT_COLORS[k]}"></span>${v}</span>`).join('') + `<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>Kritik hedef</span><span>📝 not</span>`;
+            if (calView === 'month') renderMonthView(); else renderTimeView();
             renderTimelineForSelectedDate();
         }
 
-        document.getElementById('cal-prev-btn').onclick = () => {
-            calViewingDate.setMonth(calViewingDate.getMonth() - 1);
-            playSynthSound('click');
-            renderCalendar();
-        };
+        function renderMonthView() {
+            const year = calViewingDate.getFullYear(), month = calViewingDate.getMonth();
+            document.getElementById('current-month-display').innerText = `${monthNames[month].charAt(0) + monthNames[month].slice(1).toLocaleLowerCase('tr-TR')} ${year}`;
+            const startingCol = (new Date(year, month, 1).getDay() + 6) % 7;
+            const start = new Date(year, month, 1 - startingCol);
+            const weeks = Math.ceil((startingCol + new Date(year, month + 1, 0).getDate()) / 7);
+            const todayStr = getTodayStr();
+            const maxChips = isNarrow() ? 3 : 3;
+            let html = '';
+            for (let i = 0; i < weeks * 7; i++) {
+                const d = addDays(start, i), ds = toLocalDateStr(d);
+                const inMonth = d.getMonth() === month;
+                const ev = dayEvents(ds);
+                const all = [...ev.allDay, ...ev.untimed, ...ev.timed];
+                const isToday = ds === todayStr, isSel = ds === selectedCalendarDateStr;
+                const chips = all.slice(0, maxChips).map(e => `<div class="cal-chip" style="--c:${e.color}" title="${esc((e.time ? e.time + ' ' : '') + e.title)}"><span class="cal-chip-text">${esc(e.title)}</span></div>`).join('');
+                const more = all.length > maxChips ? `<div class="text-[10px] text-gray-400 font-bold pl-1 whitespace-nowrap">+${all.length - maxChips}<span class="hidden sm:inline"> daha</span></div>` : '';
+                html += `<button data-date="${ds}" class="cal-cell text-left border-r border-b border-[#00ff9f]/10 p-1 flex flex-col gap-0.5 overflow-hidden ${inMonth ? '' : 'opacity-40'} ${isSel ? 'bg-[#00ff9f]/10' : 'hover:bg-[#00ff9f]/5'}">
+                    <div class="flex items-center justify-between">
+                        <span class="w-6 h-6 flex items-center justify-center rounded-full text-[12px] font-bold ${isToday ? 'bg-[#00ff9f] text-black' : isSel ? 'text-[#00ff9f]' : 'text-gray-300'}">${d.getDate()}</span>
+                        ${ev.note ? '<span class="text-[10px]">📝</span>' : ''}
+                    </div>
+                    ${chips}${more}
+                </button>`;
+            }
+            const grid = document.getElementById('calendar-days-grid');
+            grid.innerHTML = html;
+            grid.querySelectorAll('.cal-cell').forEach(c => c.onclick = () => {
+                const ds = c.dataset.date;
+                playSynthSound('click');
+                if (ds === selectedCalendarDateStr) { // ikinci dokunuş: gün görünümüne geç
+                    calViewingDate = new Date(ds + 'T12:00:00'); setCalView('day'); return;
+                }
+                selectedCalendarDateStr = ds;
+                if (ds.slice(0, 7) !== getMonthKey(calViewingDate)) calViewingDate = new Date(ds + 'T12:00:00');
+                renderCalendar();
+            });
+        }
 
-        document.getElementById('cal-next-btn').onclick = () => {
-            calViewingDate.setMonth(calViewingDate.getMonth() + 1);
+        function layoutLanes(events) {
+            // Çakışan etkinlikleri yan yana şeritlere yerleştir (Google Takvim gibi)
+            const DUR = 30;
+            let cluster = [], clusterEnd = -1, lanesEnd = [];
+            const flush = () => { const n = lanesEnd.length || 1; cluster.forEach(e => e.lanes = n); cluster = []; lanesEnd = []; };
+            for (const e of events) {
+                if (e.min >= clusterEnd && cluster.length) flush();
+                let lane = lanesEnd.findIndex(end => end <= e.min);
+                if (lane === -1) { lane = lanesEnd.length; lanesEnd.push(0); }
+                lanesEnd[lane] = e.min + DUR;
+                e.lane = lane;
+                cluster.push(e);
+                clusterEnd = Math.max(clusterEnd, e.min + DUR);
+            }
+            flush();
+            return events;
+        }
+
+        function renderTimeView() {
+            const nDays = calView === 'day' ? 1 : (isNarrow() ? 3 : 7);
+            let start = new Date(calViewingDate);
+            if (calView === 'week' && nDays === 7) start = addDays(start, -((start.getDay() + 6) % 7));
+            const days = Array.from({ length: nDays }, (_, i) => addDays(start, i));
+            const todayStr = getTodayStr();
+            const first = days[0], last = days[days.length - 1];
+            const fmt = d => `${d.getDate()} ${monthNames[d.getMonth()].charAt(0) + monthNames[d.getMonth()].slice(1, 3).toLocaleLowerCase('tr-TR')}`;
+            document.getElementById('current-month-display').innerText = nDays === 1 ? `${fmt(first)} ${first.getFullYear()}` : `${fmt(first)} – ${fmt(last)}`;
+
+            const data = days.map(d => ({ d, ds: toLocalDateStr(d), ev: dayEvents(toLocalDateStr(d)) }));
+            let minH = 7, maxH = 23;
+            data.forEach(x => x.ev.timed.forEach(e => { minH = Math.min(minH, Math.floor(e.min / 60)); maxH = Math.max(maxH, Math.ceil((e.min + 30) / 60)); }));
+            maxH = Math.min(24, maxH);
+            const hours = Array.from({ length: maxH - minH }, (_, i) => minH + i);
+            const cols = `44px repeat(${nDays}, minmax(0,1fr))`;
+
+            const header = `<div class="grid border-b border-[#00ff9f]/15 pb-1" style="grid-template-columns:${cols}">
+                <div></div>
+                ${data.map(x => `<button data-date="${x.ds}" class="cal-col-head flex flex-col items-center py-1 rounded hover:bg-[#00ff9f]/5">
+                    <span class="text-[11px] font-bold ${x.ds === todayStr ? 'text-[#00ff9f]' : 'text-gray-400'}">${DAY_SHORT[x.d.getDay()]}</span>
+                    <span class="w-8 h-8 flex items-center justify-center rounded-full text-base font-bold ${x.ds === todayStr ? 'bg-[#00ff9f] text-black' : x.ds === selectedCalendarDateStr ? 'border border-[#00ff9f] text-[#00ff9f]' : 'text-white'}">${x.d.getDate()}</span>
+                </button>`).join('')}
+            </div>`;
+            const hasAllDay = data.some(x => x.ev.allDay.length || x.ev.untimed.length || x.ev.note);
+            const allDayRow = hasAllDay ? `<div class="grid border-b border-[#00ff9f]/15 py-1 gap-y-0.5" style="grid-template-columns:${cols}">
+                <div class="text-[10px] text-gray-500 pt-0.5">gün boyu</div>
+                ${data.map(x => `<div class="px-0.5 space-y-0.5 min-w-0">${[...x.ev.allDay, ...x.ev.untimed].map(e => `<div class="cal-chip" style="--c:${e.color}"><span class="cal-chip-text">${esc(e.title)}</span></div>`).join('')}${x.ev.note ? '<div class="text-[10px] text-yellow-300 truncate">📝 not var</div>' : ''}</div>`).join('')}
+            </div>` : '';
+
+            const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+            const body = `<div id="cal-time-scroll" class="relative overflow-y-auto" style="max-height:min(62vh,560px)">
+                <div class="grid relative" style="grid-template-columns:${cols};height:${hours.length * HOUR_H}px">
+                    <div class="relative">${hours.map((h, i) => `<div class="absolute right-1 text-[10px] text-gray-500 font-mono" style="top:${i * HOUR_H - 6}px">${i ? String(h).padStart(2, '0') + ':00' : ''}</div>`).join('')}</div>
+                    ${data.map(x => {
+                        const evs = layoutLanes(x.ev.timed.map(e => ({ ...e })));
+                        const blocks = evs.map(e => {
+                            const top = (e.min - minH * 60) / 60 * HOUR_H;
+                            const w = 100 / e.lanes;
+                            return `<div class="cal-block" style="--c:${e.color};top:${top}px;height:${HOUR_H / 2 - 2}px;left:calc(${e.lane * w}% + 1px);width:calc(${w}% - 3px)" title="${esc(e.time + ' ' + e.title + ' +' + e.xp + ' XP')}">
+                                <span class="font-bold">${esc(e.title)}</span>${nDays <= 3 ? ` <span class="opacity-75">${e.time} · +${e.xp} XP</span>` : ''}
+                            </div>`;
+                        }).join('');
+                        const nowLine = x.ds === todayStr && nowMin >= minH * 60 && nowMin <= maxH * 60
+                            ? `<div class="absolute left-0 right-0 z-20 pointer-events-none" style="top:${(nowMin - minH * 60) / 60 * HOUR_H}px"><div class="h-0.5 bg-red-500"></div><div class="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-red-500"></div></div>` : '';
+                        return `<div data-date="${x.ds}" class="cal-day-col relative border-l border-[#00ff9f]/10 ${x.ds === selectedCalendarDateStr && nDays > 1 ? 'bg-[#00ff9f]/[0.04]' : ''}">
+                            ${hours.map((h, i) => `<div class="absolute left-0 right-0 border-t border-[#00ff9f]/[0.07]" style="top:${i * HOUR_H}px"></div>`).join('')}
+                            ${blocks}${nowLine}
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+            const box = document.getElementById('cal-time-view');
+            box.innerHTML = header + allDayRow + body;
+            box.querySelectorAll('.cal-col-head').forEach(b => b.onclick = () => {
+                selectedCalendarDateStr = b.dataset.date; playSynthSound('click');
+                if (calView === 'week') { calViewingDate = new Date(b.dataset.date + 'T12:00:00'); setCalView('day'); } else renderCalendar();
+            });
+            box.querySelectorAll('.cal-day-col').forEach(c => c.onclick = () => { if (selectedCalendarDateStr !== c.dataset.date) { selectedCalendarDateStr = c.dataset.date; renderCalendar(); } });
+            // Kaydırmayı ilk etkinliğe ya da şu anki saate getir
+            const sc = document.getElementById('cal-time-scroll');
+            const firstMin = Math.min(...data.flatMap(x => x.ev.timed.map(e => e.min)), data.some(x => x.ds === todayStr) ? nowMin : 9 * 60);
+            if (sc) sc.scrollTop = Math.max(0, (firstMin - minH * 60) / 60 * HOUR_H - 40);
+        }
+
+        function setCalView(v) {
+            calView = v;
+            try { localStorage.setItem('personaxp_cal_view', v); } catch (e) {}
+            if (v !== 'month' && selectedCalendarDateStr) calViewingDate = new Date(selectedCalendarDateStr + 'T12:00:00');
+            renderCalendar();
+        }
+        document.querySelectorAll('.cal-view-btn').forEach(b => b.onclick = () => { playSynthSound('click'); setCalView(b.dataset.calview); });
+        function calStep(dir) {
+            if (calView === 'month') { calViewingDate = new Date(calViewingDate.getFullYear(), calViewingDate.getMonth() + dir, 1); }
+            else if (calView === 'day') { calViewingDate = addDays(calViewingDate, dir); selectedCalendarDateStr = toLocalDateStr(calViewingDate); }
+            else calViewingDate = addDays(calViewingDate, dir * (isNarrow() ? 3 : 7));
             playSynthSound('click');
             renderCalendar();
-        };
+        }
+        document.getElementById('cal-prev-btn').onclick = () => calStep(-1);
+        document.getElementById('cal-next-btn').onclick = () => calStep(1);
+        document.getElementById('cal-today-btn').onclick = () => { calViewingDate = new Date(); selectedCalendarDateStr = getTodayStr(); playSynthSound('click'); renderCalendar(); };
+        document.getElementById('nav-calendar').addEventListener('click', () => setTimeout(renderCalendar, 0));
+        window.addEventListener('resize', () => { if (calView === 'week' && !document.getElementById('section-calendar')?.classList.contains('hidden')) renderCalendar(); });
 
         function renderTimelineForSelectedDate() {
             const container = document.getElementById('timeline-container');
@@ -2847,6 +2996,8 @@
                 document.getElementById(`section-${t}`)?.classList.remove('hidden');
                 btn.classList.replace('text-gray-500', 'text-[#00ff9f]');
                 btn.classList.add('border-b-2', 'border-[#00ff9f]');
+                document.body.dataset.tab = t;
+                updateBottomNav();
             };
         });
 
@@ -3040,6 +3191,24 @@ Kurallar:
         document.getElementById('coach-clear').onclick = () => { if (!confirm("Sohbet temizlensin mi?")) return; coachMessages = []; saveCoachMessages(); renderCoach(); };
         renderCoach();
         // ================== /AI KOÇ ==================
+
+        // ---- TELEFON ALT MENÜSÜ ----
+        function updateBottomNav() {
+            document.querySelectorAll('#bottom-nav [data-bn]').forEach(b => {
+                const on = b.dataset.bn === document.body.dataset.tab;
+                b.classList.toggle('text-[#00ff9f]', on);
+                b.classList.toggle('text-gray-500', !on);
+                b.querySelector('.bn-dot')?.classList.toggle('opacity-0', !on);
+            });
+        }
+        document.querySelectorAll('#bottom-nav [data-bn]').forEach(b => b.onclick = () => {
+            const t = b.dataset.bn;
+            if (t === 'home') { document.body.dataset.tab = 'home'; playSynthSound('click'); updateBottomNav(); }
+            else document.getElementById(`nav-${t}`)?.click();
+            window.scrollTo({ top: 0 });
+        });
+        if (window.innerWidth < 768) document.body.dataset.tab = 'home';
+        updateBottomNav();
 
         // ---- VERİ KASASI ----
         const vaultModal = document.getElementById('vault-modal');
