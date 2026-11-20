@@ -524,16 +524,9 @@
                             <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🌳 YETENEK AĞACI</h3>
                             <span class="text-[10px] text-gray-400">Yaptığın her şey bir yeteneği büyütür</span>
                         </div>
-                        <button id="tree-back-btn" class="hidden text-[10px] border border-[#00ff9f]/30 text-[#00ff9f] px-2 py-1 rounded hover:bg-[#00ff9f]/20">◀ TÜM DALLAR</button>
                     </div>
-                    <div id="tree-overview" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-                    <div id="tree-detail" class="hidden space-y-3">
-                        <div id="tree-detail-header"></div>
-                        <div class="overflow-x-auto bg-[#050a08] border border-[#00ff9f]/10 rounded">
-                            <div id="tree-map"></div>
-                        </div>
-                        <div id="tree-node-info"></div>
-                    </div>
+                    <div id="tree-overview"></div>
+                    <div id="tree-node-info" class="mt-3"></div>
                 </div>
             </div>
 
@@ -1109,143 +1102,252 @@
         }
 
         // ---- Görünüm ----
-        let treeOpenRoot = null;
         let treeSelected = null;
 
         function barHtml(pct, h = 'h-1.5') {
             return `<div class="w-full bg-[#0a1814] ${h} rounded overflow-hidden border border-[#00ff9f]/10"><div class="bg-[#00ff9f] h-full" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>`;
         }
 
+        // ---- Organik ağaç görünümü ----
+        // Gövde altta; ana dallar yukarı doğru yelpaze gibi açılır, alt dallar ve yapraklar uçlara dizilir.
+        const TREE_W = 1200, TREE_H = 1200, FORK = { x: 600, y: 860 }, TRUNK_BASE = { x: 600, y: 1060 };
+        const RADII = [0, 210, 360, 500];
+        let treeView = null;          // {x,y,w,h} viewBox
+        let treeLayoutCache = null;
+        let treeFull = null;
+
+        function nodeDepth(id) { let d = 0, n = tree().nodes[id]; while (n && n.parent) { d++; n = tree().nodes[n.parent]; } return d + 1; }
+        function leafWeight(id) { const k = childrenOf(id); return k.length ? k.reduce((s, c) => s + leafWeight(c.id), 0) : 1; }
+        // Elips şeklinde yay: ağaç yana değil yukarı doğru uzansın (telefona daha iyi sığar)
+        function polar(r, a) { return { x: FORK.x + r * Math.cos(a) * 0.82, y: FORK.y + r * Math.sin(a) * 1.25 }; }
+
+        function layoutTree() {
+            const pos = {};
+            const roots = nodesArr().filter(n => !n.parent);
+            const A0 = -Math.PI + 0.22, A1 = -0.22;              // ~ -167° .. -13°
+            // Büyük dallar biraz daha fazla yer alır ama küçükler ezilmez
+            const weights = roots.map(r => 2 + Math.sqrt(leafWeight(r.id)) * 2);
+            const total = weights.reduce((a, b) => a + b, 0) || 1;
+            let a = A0;
+            const place = (id, from, to, depth) => {
+                const mid = (from + to) / 2;
+                const kids = childrenOf(id);
+                let r = RADII[Math.min(depth, 3)];
+                pos[id] = { ...polar(r, mid), a: mid, r, depth };
+                if (!kids.length) return;
+                const ws = kids.map(k => leafWeight(k.id)), tw = ws.reduce((x, y) => x + y, 0);
+                let s = from;
+                kids.forEach((k, i) => { const e = s + (to - from) * ws[i] / tw; place(k.id, s, e, depth + 1); s = e; });
+            };
+            roots.forEach((r, i) => { const span = (A1 - A0) * weights[i] / total; place(r.id, a, a + span, 1); a += span; });
+            // Yaprakları iki halkaya şaşırt ki isimler üst üste binmesin
+            const parents = new Set(Object.keys(pos).map(id => tree().nodes[id].parent).filter(Boolean));
+            for (const par of parents) {
+                const sib = childrenOf(par).map(c => c.id).filter(id => pos[id] && pos[id].depth >= 2 && !childrenOf(id).length).sort((p, q) => pos[p].a - pos[q].a);
+                if (sib.length < 3) continue;
+                sib.forEach((id, i) => { if (i % 2) { const p = pos[id]; Object.assign(p, polar(p.r + 70, p.a), { r: p.r + 70 }); } });
+            }
+            return pos;
+        }
+
+        function branchWidth(xp, depth) {
+            const base = depth === 1 ? 5 : depth === 2 ? 3 : 2;
+            return base + Math.min(depth === 1 ? 9 : 6, Math.sqrt(Math.max(0, xp)) / 4);
+        }
+
+        function renderOrganicTree() {
+            const wrap = document.getElementById('tree-canvas');
+            if (!wrap) return;
+            const pos = layoutTree();
+            treeLayoutCache = pos;
+            const xs = Object.values(pos).map(p => p.x), ys = Object.values(pos).map(p => p.y);
+            const bounds = { x: Math.min(...xs) - 70, y: Math.min(...ys) - 60, x2: Math.max(...xs) + 70, y2: TRUNK_BASE.y + 20 };
+            bounds.w = bounds.x2 - bounds.x; bounds.h = bounds.y2 - bounds.y;
+            treeFull = bounds;
+            const box = wrap.parentElement;
+            if (box && box.clientWidth) box.style.height = Math.round(Math.max(320, Math.min(window.innerHeight * 0.72, box.clientWidth * bounds.h / bounds.w))) + 'px';
+            if (!treeView) treeView = { x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h };
+            const sel = treeSelected && pos[treeSelected] ? treeSelected : null;
+            const zoom = (treeFull?.w || TREE_W) / treeView.w;
+
+            let branches = '', links = '', nodes = '';
+            const lit = id => totalXp(id) > 0;
+
+            // gövde
+            const allXp = nodesArr().filter(n => !n.parent).reduce((s, r) => s + totalXp(r.id), 0);
+            const tw = 16 + Math.min(14, Math.sqrt(allXp) / 6);
+            branches += `<path d="M${TRUNK_BASE.x - tw * 1.6},${TRUNK_BASE.y} Q${FORK.x},${TRUNK_BASE.y - 40} ${FORK.x},${FORK.y + 60}" stroke="#14382b" stroke-width="${tw * 0.5}" fill="none" stroke-linecap="round"/>`;
+            branches += `<path d="M${TRUNK_BASE.x + tw * 1.6},${TRUNK_BASE.y} Q${FORK.x},${TRUNK_BASE.y - 40} ${FORK.x},${FORK.y + 60}" stroke="#14382b" stroke-width="${tw * 0.5}" fill="none" stroke-linecap="round"/>`;
+            branches += `<path d="M${TRUNK_BASE.x},${TRUNK_BASE.y} C${FORK.x - 12},${(TRUNK_BASE.y + FORK.y) / 2 + 60} ${FORK.x + 12},${(TRUNK_BASE.y + FORK.y) / 2 - 40} ${FORK.x},${FORK.y}" stroke="${allXp > 0 ? '#1d6b4f' : '#1f3a30'}" stroke-width="${tw}" fill="none" stroke-linecap="round"/>`;
+
+            // dallar (ebeveyn → çocuk, kavisli)
+            for (const id of Object.keys(pos)) {
+                const n = tree().nodes[id], p = pos[id];
+                const parentP = n.parent ? pos[n.parent] : { x: FORK.x, y: FORK.y, a: -Math.PI / 2, r: 0 };
+                const c = { x: FORK.x + (parentP.r + (p.r - parentP.r) * 0.55) * Math.cos(parentP.r ? parentP.a * 0.4 + p.a * 0.6 : p.a), y: FORK.y + (parentP.r + (p.r - parentP.r) * 0.55) * Math.sin(parentP.r ? parentP.a * 0.4 + p.a * 0.6 : p.a) };
+                const isLit = lit(id);
+                const onPath = sel && (id === sel || isAncestor(id, sel));
+                branches += `<path d="M${parentP.x},${parentP.y} Q${c.x},${c.y} ${p.x},${p.y}" stroke="${onPath ? '#f59e0b' : isLit ? '#00ff9f' : '#1f3a30'}" stroke-opacity="${isLit || onPath ? 0.8 : 1}" stroke-width="${branchWidth(totalXp(id), p.depth)}" fill="none" stroke-linecap="round"/>`;
+            }
+
+            // pasif bağlantılar: hepsi soluk, seçilinin bağlantıları parlak ve yüzdeli
+            for (const n of nodesArr()) {
+                for (const l of (n.links || [])) {
+                    const a = pos[n.id], b = pos[l.to];
+                    if (!a || !b) continue;
+                    const active = sel && (n.id === sel || l.to === sel);
+                    const bothLit = lit(n.id) && lit(l.to);
+                    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+                    // kavisi gövdeye doğru (aşağı) bük: yapraklar arası kemer
+                    const cx = mx + (FORK.x - mx) * 0.25, cy = my + (FORK.y - my) * 0.25;
+                    links += `<path d="M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}" fill="none" stroke="#f59e0b" stroke-width="${active ? 2.2 : 1.2}" stroke-dasharray="${active ? '6 4' : '3 5'}" opacity="${active ? 0.95 : bothLit ? 0.35 : 0.12}"/>`;
+                    if (active) {
+                        const lx = (a.x + 2 * cx + b.x) / 4, ly = (a.y + 2 * cy + b.y) / 4;
+                        const out = n.id === sel;
+                        links += `<g><rect x="${lx - 24}" y="${ly - 10}" width="48" height="18" rx="4" fill="#050a08" stroke="#f59e0b" stroke-opacity="0.6"/><text x="${lx}" y="${ly + 4}" fill="#f59e0b" font-size="12" text-anchor="middle" font-family="JetBrains Mono">${out ? '→' : '←'}%${l.pct}</text></g>`;
+                    }
+                }
+            }
+
+            // düğümler
+            const order = Object.keys(pos).sort((p, q) => pos[q].depth - pos[p].depth);
+            for (const id of order) {
+                const n = tree().nodes[id], p = pos[id];
+                const xp = totalXp(id), L = skillLevel(xp), isLit = xp > 0, isSel = id === sel;
+                const related = sel && (n.links || []).some(l => l.to === sel) || sel && (tree().nodes[sel]?.links || []).some(l => l.to === id);
+                const r = p.depth === 1 ? 26 : childrenOf(id).length ? 19 : 14;
+                const showLabel = p.depth < 3 || isLit || isSel || related || zoom > 1.6;
+                const label = n.name.length > 16 ? n.name.slice(0, 15) + '…' : n.name;
+                const ly = p.depth === 1 ? p.y - r - 22 : p.y + r + 14;
+                nodes += `<g data-node="${esc(id)}" style="cursor:pointer">
+                    ${isLit ? `<circle cx="${p.x}" cy="${p.y}" r="${r + 5}" fill="#00ff9f" opacity="0.10"/>` : ''}
+                    <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${isLit ? '#0a2a1f' : '#0a1210'}" stroke="${isSel ? '#f59e0b' : related ? '#f59e0b' : isLit ? '#00ff9f' : '#1f3a30'}" stroke-width="${isSel ? 4 : related ? 3 : 2}"/>
+                    <text x="${p.x}" y="${p.y + r * 0.38}" font-size="${r * 1.05}" text-anchor="middle" opacity="${isLit ? 1 : 0.35}">${esc(n.icon)}</text>
+                    ${showLabel ? `<text x="${p.x}" y="${ly}" font-size="${p.depth === 1 ? 15 : 12}" font-weight="${p.depth === 1 ? 800 : 400}" fill="${isLit ? '#e5fff5' : '#5b6e66'}" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${esc(label)}</text>
+                    <text x="${p.x}" y="${ly + (p.depth === 1 ? 16 : 13)}" font-size="${p.depth === 1 ? 12 : 10}" fill="${isLit ? '#00ff9f' : '#3b4f47'}" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${isLit ? 'Lv ' + L.lvl : 'kilitli'}</text>` : ''}
+                </g>`;
+            }
+            const L = skillLevel(allXp);
+            const trunkLabel = `<text x="${FORK.x}" y="${TRUNK_BASE.y - 8}" font-size="14" fill="#00ff9f" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" paint-order="stroke" stroke="#050a08" stroke-width="4">${esc(localState.customName || 'ALP').toUpperCase()} · Lv ${L.lvl}</text>`;
+
+            wrap.innerHTML = `<svg id="tree-svg" viewBox="${treeView.x} ${treeView.y} ${treeView.w} ${treeView.h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;touch-action:none">${branches}${links}${nodes}${trunkLabel}</svg>`;
+            attachTreeGestures();
+        }
+
+        function isAncestor(anc, id) { let n = tree().nodes[id]; while (n && n.parent) { if (n.parent === anc) return true; n = tree().nodes[n.parent]; } return false; }
+
+        // Kaydırma / yakınlaştırma (fare, dokunmatik, iki parmak)
+        function attachTreeGestures() {
+            const svg = document.getElementById('tree-svg');
+            if (!svg) return;
+            const pts = new Map();
+            let moved = false, startDist = 0, startView = null, startMid = null, downNode = null, downPt = null;
+            const toSvg = (cx, cy) => {
+                const r = svg.getBoundingClientRect();
+                const s = Math.max(treeView.w / r.width, treeView.h / r.height);
+                const offX = (r.width * s - treeView.w) / 2, offY = (r.height * s - treeView.h) / 2;
+                return { x: treeView.x - offX + (cx - r.left) * s, y: treeView.y - offY + (cy - r.top) * s, s };
+            };
+            const apply = () => svg.setAttribute('viewBox', `${treeView.x} ${treeView.y} ${treeView.w} ${treeView.h}`);
+            const clampZoom = (w) => Math.max(TREE_W / 6, Math.min(TREE_W * 1.3, w));
+            svg.onpointerdown = (e) => {
+                svg.setPointerCapture(e.pointerId);
+                pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                moved = false;
+                downPt = { x: e.clientX, y: e.clientY };
+                downNode = e.target.closest('[data-node]')?.getAttribute('data-node') || null;
+                startView = { ...treeView };
+                if (pts.size === 2) {
+                    const [a, b] = [...pts.values()];
+                    startDist = Math.hypot(a.x - b.x, a.y - b.y);
+                    startMid = toSvg((a.x + b.x) / 2, (a.y + b.y) / 2);
+                }
+            };
+            svg.onpointermove = (e) => {
+                if (!pts.has(e.pointerId)) return;
+                const prev = pts.get(e.pointerId);
+                pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                if (pts.size === 1) {
+                    const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+                    if (Math.abs(dx) + Math.abs(dy) > 0) {
+                        const s = toSvg(0, 0).s;
+                        treeView.x -= dx * s; treeView.y -= dy * s;
+                        if (downPt && Math.hypot(e.clientX - downPt.x, e.clientY - downPt.y) > 6) moved = true;
+                        apply();
+                    }
+                } else if (pts.size === 2 && startDist) {
+                    const [a, b] = [...pts.values()];
+                    const d = Math.hypot(a.x - b.x, a.y - b.y);
+                    const nw = clampZoom(startView.w * startDist / d), k = nw / startView.w;
+                    treeView = { x: startMid.x - (startMid.x - startView.x) * k, y: startMid.y - (startMid.y - startView.y) * k, w: nw, h: startView.h * k };
+                    moved = true;
+                    apply();
+                }
+            };
+            const end = (e) => {
+                const wasSingle = pts.size === 1;
+                pts.delete(e.pointerId);
+                if (pts.size < 2) startDist = 0;
+                if (wasSingle && !moved && downNode) { window.selectTreeNode(downNode); return; }
+                if (moved && pts.size === 0) renderOrganicTree(); // zoom'a göre etiketleri güncelle
+            };
+            svg.onpointerup = end;
+            svg.onpointercancel = end;
+            svg.onwheel = (e) => {
+                e.preventDefault();
+                const p = toSvg(e.clientX, e.clientY);
+                const nw = clampZoom(treeView.w * (e.deltaY > 0 ? 1.15 : 1 / 1.15)), k = nw / treeView.w;
+                treeView = { x: p.x - (p.x - treeView.x) * k, y: p.y - (p.y - treeView.y) * k, w: nw, h: treeView.h * k };
+                apply();
+                clearTimeout(svg._wt); svg._wt = setTimeout(renderOrganicTree, 200);
+            };
+        }
+        window.treeZoom = (f) => {
+            if (!treeView) return;
+            const cx = treeView.x + treeView.w / 2, cy = treeView.y + treeView.h / 2;
+            const nw = Math.max(TREE_W / 6, Math.min(TREE_W * 1.3, treeView.w * f)), k = nw / treeView.w;
+            treeView = { x: cx - treeView.w * k / 2, y: cy - treeView.h * k / 2, w: nw, h: treeView.h * k };
+            renderOrganicTree();
+        };
+        window.treeReset = () => { treeView = null; renderOrganicTree(); };
+        // Sekme gizliyken boyut ölçülemez; sekme açılınca ve ekran dönünce yeniden çiz
+        document.getElementById('nav-tree').addEventListener('click', () => setTimeout(() => { treeView = null; renderOrganicTree(); }, 0));
+        window.addEventListener('resize', () => { if (!document.getElementById('section-tree')?.classList.contains('hidden')) renderOrganicTree(); });
+        function focusTreeNode(id) {
+            const p = treeLayoutCache?.[id]; if (!p) return;
+            const w = TREE_W / 2.2, h = (TREE_H - 40) / 2.2;
+            treeView = { x: p.x - w / 2, y: p.y - h / 2, w, h };
+        }
+
         function renderSkillTree() {
             if (!tree()) return;
             refreshSkillSelects();
             const overview = document.getElementById('tree-overview');
-            const detail = document.getElementById('tree-detail');
-            const back = document.getElementById('tree-back-btn');
             if (!overview) return;
-            if (treeOpenRoot && !tree().nodes[treeOpenRoot]) treeOpenRoot = null;
-
-            overview.classList.toggle('hidden', !!treeOpenRoot);
-            detail.classList.toggle('hidden', !treeOpenRoot);
-            back.classList.toggle('hidden', !treeOpenRoot);
-
-            if (!treeOpenRoot) {
-                const roots = nodesArr().filter(n => !n.parent);
-                overview.innerHTML = roots.map(r => {
-                    const xp = totalXp(r.id), L = skillLevel(xp);
-                    const leaves = leafIds().filter(id => rootOf(id) === r.id).map(id => tree().nodes[id]);
-                    const top = leaves.map(n => ({ n, xp: totalXp(n.id) })).filter(o => o.xp > 0).sort((a, b) => b.xp - a.xp).slice(0, 3);
-                    return `<button onclick="window.openTreeRoot('${esc(r.id)}')" class="text-left bg-[#0a1814] border border-[#00ff9f]/15 hover:border-[#00ff9f]/50 rounded p-3 space-y-2 transition-all">
-                        <div class="flex justify-between items-center"><span class="text-sm font-bold text-white">${esc(r.icon)} ${esc(r.name)}</span><span class="text-[10px] text-[#00ff9f] font-mono font-bold">LVL ${L.lvl}</span></div>
-                        ${barHtml(L.pct)}
-                        <div class="text-[10px] text-gray-400 font-mono">${top.length ? top.map(o => `${esc(o.n.icon)} ${esc(o.n.name)} <span class="text-[#00ff9f]">Lv${skillLevel(o.xp).lvl}</span>`).join(' · ') : 'Henüz filizlenmedi 🌱'}</div>
-                        <div class="text-[9px] text-gray-600">${leaves.length} yetenek · ${xp.toLocaleString('tr-TR')} XP · dokun ve dallan ▶</div>
-                    </button>`;
-                }).join('') + `<button onclick="window.addRootBranch()" class="border border-dashed border-[#00ff9f]/30 text-[#00ff9f]/70 hover:text-[#00ff9f] rounded p-3 text-xs font-bold">＋ YENİ ANA DAL</button>`;
-                return;
+            if (!document.getElementById('tree-canvas')) {
+                overview.innerHTML = `
+                    <div class="relative bg-[#050a08] border border-[#00ff9f]/15 rounded overflow-hidden" style="height:480px">
+                        <div id="tree-canvas" style="width:100%;height:100%"></div>
+                        <div class="absolute top-2 right-2 flex flex-col gap-1">
+                            <button onclick="window.treeZoom(1/1.4)" class="w-8 h-8 bg-[#0a1814] border border-[#00ff9f]/40 text-[#00ff9f] rounded font-bold" aria-label="Yakınlaştır">＋</button>
+                            <button onclick="window.treeZoom(1.4)" class="w-8 h-8 bg-[#0a1814] border border-[#00ff9f]/40 text-[#00ff9f] rounded font-bold" aria-label="Uzaklaştır">－</button>
+                            <button onclick="window.treeReset()" class="w-8 h-8 bg-[#0a1814] border border-[#00ff9f]/40 text-[#00ff9f] rounded text-xs" aria-label="Tümünü göster">⟲</button>
+                        </div>
+                        <div class="absolute top-2 left-2 text-[9px] font-mono pointer-events-none space-y-0.5">
+                            <div class="text-[#00ff9f]">━ büyüyen dal</div><div class="text-amber-400">┅ pasif katkı</div>
+                        </div>
+                    </div>
+                    <div class="text-[9px] text-gray-500 font-mono mt-1">Sürükle: kaydır · İki parmak / tekerlek: yakınlaştır · Dokun: detay</div>
+                    <button onclick="window.addRootBranch()" class="w-full mt-2 border border-dashed border-[#00ff9f]/30 text-[#00ff9f]/70 hover:text-[#00ff9f] rounded p-2 text-xs font-bold">＋ YENİ ANA DAL</button>`;
             }
-
-            const r = tree().nodes[treeOpenRoot];
-            const rx = totalXp(r.id), RL = skillLevel(rx);
-            document.getElementById('tree-detail-header').innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="text-base font-bold text-white">${esc(r.icon)} ${esc(r.name)} <span class="text-[11px] text-[#00ff9f] font-mono">LVL ${RL.lvl}</span></span>
-                    <span class="flex gap-1">
-                        <button onclick="window.editNode('${esc(r.id)}')" class="text-[10px] border border-gray-600 text-gray-300 px-2 py-1 rounded">✏️</button>
-                        <button onclick="window.addChild('${esc(r.id)}')" class="text-[10px] border border-[#00ff9f]/40 text-[#00ff9f] px-2 py-1 rounded">＋ DAL/YETENEK</button>
-                    </span>
-                </div>
-                ${barHtml(RL.pct)}
-                <div class="text-[10px] text-gray-500">Bir yeteneğe dokun: bağlantıları ve detayı görünür. Kesikli çizgiler = pasif katkı.</div>`;
-            renderTreeMap(r.id);
+            renderOrganicTree();
             renderNodeInfo();
-        }
-
-        function renderTreeMap(rootId) {
-            const cols = childrenOf(rootId);
-            const COLW = 104, ROWH = 74, TOP = 54;
-            const pos = {};
-            const avail = document.getElementById('tree-map')?.parentElement?.clientWidth || 340;
-            // Dal ekrana sığmıyorsa kökü sola al (telefonda kesilmesin), sığıyorsa ortala
-            const rootX = cols.length * COLW > avail ? COLW / 2 : Math.max(cols.length * COLW, 320) / 2;
-            pos[rootId] = { x: rootX, y: 30 };
-            let maxRows = 1;
-            cols.forEach((c, i) => {
-                const x = i * COLW + COLW / 2 + Math.max(0, (320 - cols.length * COLW) / 2);
-                pos[c.id] = { x, y: TOP + 50 };
-                const kids = childrenOf(c.id);
-                kids.forEach((k, j) => { pos[k.id] = { x, y: TOP + 50 + (j + 1) * ROWH }; });
-                maxRows = Math.max(maxRows, kids.length + 1);
-            });
-            const W = Math.max(cols.length * COLW, 320), H = TOP + 60 + maxRows * ROWH;
-            const sel = treeSelected && pos[treeSelected] ? treeSelected : null;
-
-            let lines = '';
-            // Gövde: kökten aşağı, yatay bir hat, oradan her sütuna dikey iniş (org-şema düzeni)
-            const busY = TOP + 18;
-            if (cols.length) {
-                const xs = cols.map(c => pos[c.id].x);
-                const anyLit = cols.some(c => totalXp(c.id) > 0);
-                lines += `<line x1="${pos[rootId].x}" y1="${pos[rootId].y + 20}" x2="${pos[rootId].x}" y2="${busY}" stroke="${anyLit ? '#00ff9f' : '#1f3a30'}" stroke-width="2" opacity="0.7"/>`;
-                lines += `<line x1="${Math.min(...xs, pos[rootId].x)}" y1="${busY}" x2="${Math.max(...xs, pos[rootId].x)}" y2="${busY}" stroke="#1f3a30" stroke-width="1.5"/>`;
-                const litXs = cols.filter(c => totalXp(c.id) > 0).map(c => pos[c.id].x);
-                if (litXs.length) lines += `<line x1="${Math.min(...litXs, pos[rootId].x)}" y1="${busY}" x2="${Math.max(...litXs, pos[rootId].x)}" y2="${busY}" stroke="#00ff9f" stroke-width="2" opacity="0.7"/>`;
-            }
-            cols.forEach(c => {
-                const b = pos[c.id];
-                const lit = totalXp(c.id) > 0;
-                lines += `<line x1="${b.x}" y1="${busY}" x2="${b.x}" y2="${b.y - 20}" stroke="${lit ? '#00ff9f' : '#1f3a30'}" stroke-width="${lit ? 2 : 1.5}" opacity="${lit ? 0.7 : 1}"/>`;
-                childrenOf(c.id).forEach(k => {
-                    const p = pos[k.id], prev = { x: p.x, y: p.y - ROWH };
-                    const kl = totalXp(k.id) > 0;
-                    lines += `<line x1="${prev.x}" y1="${prev.y + 20}" x2="${p.x}" y2="${p.y - 20}" stroke="${kl ? '#00ff9f' : '#1f3a30'}" stroke-width="${kl ? 2 : 1.5}" opacity="${kl ? 0.6 : 1}"/>`;
-                });
-            });
-            // pasif bağlantılar (seçili yetenek için; hedef bu dalda değilse kenarda ok)
-            let passive = '';
-            if (sel) {
-                const sn = tree().nodes[sel];
-                const outs = (sn.links || []).map(l => ({ from: sel, to: l.to, pct: l.pct, dir: 'out' }));
-                const ins = nodesArr().flatMap(n => (n.links || []).filter(l => l.to === sel).map(l => ({ from: n.id, to: sel, pct: l.pct, dir: 'in' })));
-                for (const e of [...outs, ...ins]) {
-                    const a = pos[e.from], b = pos[e.to];
-                    if (a && b) {
-                        // Yay, düğümlerin altından geçer; giden ve gelen bağlantılar farklı derinlikte
-                        const bend = e.dir === "out" ? 26 : 46;
-                        const ay = a.y + 40, by = b.y + 40;
-                        const sameCol = Math.abs(a.x - b.x) < 5;
-                        const cx = sameCol ? a.x + bend + 10 : (a.x + b.x) / 2;
-                        const cy = sameCol ? (ay + by) / 2 : Math.max(ay, by) + bend;
-                        const lx = (a.x + 2 * cx + b.x) / 4, ly = (ay + 2 * cy + by) / 4;
-                        passive += `<path d="M${a.x},${ay} Q${cx},${cy} ${b.x},${by}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.9"/>`;
-                        passive += `<rect x="${lx - 16}" y="${ly - 8}" width="32" height="13" rx="3" fill="#050a08"/><text x="${lx}" y="${ly + 2}" fill="#f59e0b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${e.dir === 'out' ? '→' : '←'}%${e.pct}</text>`;
-                    }
-                }
-            }
-            let nodesSvg = '';
-            const drawNode = (id, r) => {
-                const n = tree().nodes[id], p = pos[id];
-                const xp = totalXp(id), L = skillLevel(xp);
-                const active = xp > 0, isSel = id === sel;
-                const stroke = isSel ? '#f59e0b' : active ? '#00ff9f' : '#1f3a30';
-                const label = n.name.length > 13 ? n.name.slice(0, 12) + '…' : n.name;
-                nodesSvg += `<g onclick="window.selectTreeNode('${esc(id)}')" style="cursor:pointer">
-                    <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${active ? '#0a2a1f' : '#0a1210'}" stroke="${stroke}" stroke-width="${isSel ? 3 : 2}"/>
-                    ${active && !n.parent ? '' : ''}
-                    <text x="${p.x}" y="${p.y + 5}" font-size="${r > 20 ? 17 : 14}" text-anchor="middle" opacity="${active ? 1 : 0.4}">${esc(n.icon)}</text>
-                    <text x="${p.x}" y="${p.y + r + 12}" font-size="9" fill="${active ? '#e5fff5' : '#5b6e66'}" text-anchor="middle" font-family="JetBrains Mono">${esc(label)}</text>
-                    <text x="${p.x}" y="${p.y + r + 22}" font-size="8" fill="${active ? '#00ff9f' : '#3b4f47'}" text-anchor="middle" font-family="JetBrains Mono">${active ? 'Lv ' + L.lvl : 'kilitli'}</text>
-                </g>`;
-            };
-            drawNode(rootId, 20);
-            cols.forEach(c => { drawNode(c.id, childrenOf(c.id).length ? 19 : 17); childrenOf(c.id).forEach(k => drawNode(k.id, 16)); });
-            document.getElementById('tree-map').innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;min-width:${W}px">${lines}${passive}${nodesSvg}</svg>`;
         }
 
         function renderNodeInfo() {
             const box = document.getElementById('tree-node-info');
-            const id = treeSelected && tree().nodes[treeSelected] && rootOf(treeSelected) === treeOpenRoot ? treeSelected : null;
-            if (!id) { box.innerHTML = `<div class="text-[10px] text-gray-600 font-mono">Detay için ağaçtan bir yetenek seç.</div>`; return; }
+            const id = treeSelected && tree().nodes[treeSelected] ? treeSelected : null;
+            if (!id) { box.innerHTML = `<div class="text-[10px] text-gray-600 font-mono pt-2">Detay ve bağlantılar için ağaçtan bir yeteneğe dokun.</div>`; return; }
             const n = tree().nodes[id];
             const leaf = !!n.parent && childrenOf(id).length === 0;
             const xp = totalXp(id), L = skillLevel(xp);
@@ -1272,15 +1374,14 @@
                 <div class="text-[9px] text-gray-600">Anahtar kelimeler: ${esc((n.kw || []).join(', ') || '—')}</div>` : ''}
                 <div class="flex flex-wrap gap-1 pt-1">
                     <button onclick="window.editNode('${esc(id)}')" class="text-[10px] border border-gray-600 text-gray-300 px-2 py-1 rounded">✏️ Düzenle</button>
+                    ${!n.parent ? `<button onclick="window.addChild('${esc(id)}')" class="text-[10px] border border-[#00ff9f]/40 text-[#00ff9f] px-2 py-1 rounded">＋ Alt dal / yetenek</button>` : ''}
                     ${n.parent && tree().nodes[n.parent] && !tree().nodes[n.parent].parent ? `<button onclick="window.addChild('${esc(id)}')" class="text-[10px] border border-[#00ff9f]/40 text-[#00ff9f] px-2 py-1 rounded">＋ Alt yetenek</button>` : ''}
                     ${n.parent ? `<button onclick="window.deleteNode('${esc(id)}')" class="text-[10px] border border-red-500/40 text-red-400 px-2 py-1 rounded">✕ Sil</button>` : ''}
                 </div>
             </div>`;
         }
 
-        window.openTreeRoot = (id) => { treeOpenRoot = id; treeSelected = null; playSynthSound('click'); renderSkillTree(); };
-        document.getElementById('tree-back-btn').onclick = () => { treeOpenRoot = null; treeSelected = null; playSynthSound('click'); renderSkillTree(); };
-        window.selectTreeNode = (id) => { treeSelected = treeSelected === id ? null : id; playSynthSound('click'); renderTreeMap(treeOpenRoot); renderNodeInfo(); };
+        window.selectTreeNode = (id) => { treeSelected = treeSelected === id ? null : id; playSynthSound('click'); renderOrganicTree(); renderNodeInfo(); if (treeSelected) document.getElementById('tree-node-info')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
 
         function newNodeId(name) {
             let base = trLower(name).replace(/[^a-z0-9ğüşıöç]+/g, '-').replace(/^-|-$/g, '') || 'yetenek';
@@ -1315,7 +1416,7 @@
             const icon = prompt("Bir emoji seç:", "🌟") || "🌟";
             const id = newNodeId(name);
             tree().nodes[id] = { id, name: name.trim(), icon: icon.trim(), parent: null, kw: [], xp: 0, passiveXp: 0, links: [] };
-            treeOpenRoot = id;
+            treeSelected = id;
             await securePersistVault();
             updateDashboardUI();
         };
