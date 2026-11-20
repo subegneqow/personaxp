@@ -2903,8 +2903,17 @@ Kurallar:
                 model: COACH_MODELS[coachModelIdx],
                 systemInstruction: COACH_SYSTEM + "\n\nKULLANICI VERİSİ (güncel):\n" + buildCoachContext()
             });
-            const history = coachMessages.slice(-12).filter(m => m.text && !m.error).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
-            while (history.length && history[0].role !== 'user') history.shift();
+            // Geçmiş: sadece başarılı "kullanıcı → koç" çiftleri (şu an gönderilen mesaj ve boş cevap hariç)
+            const past = coachMessages.slice(0, -2);
+            const history = [];
+            for (let i = 0; i < past.length - 1; i++) {
+                const u = past[i], m = past[i + 1];
+                if (u.role === 'user' && m.role !== 'user' && m.text && !m.error) {
+                    history.push({ role: 'user', parts: [{ text: u.text }] }, { role: 'model', parts: [{ text: m.text }] });
+                    i++;
+                }
+            }
+            history.splice(0, Math.max(0, history.length - 12));
             coachChat = model.startChat({ history });
         }
 
