@@ -288,6 +288,7 @@
                             <option value="FIN">FIN - Finans (+5)</option>
                             <option value="SOC">SOC - Sosyal (+5)</option>
                         </select>
+                        <select id="pomo-skill" class="skill-select w-full bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] text-[9px] rounded p-1.5"></select>
                         <div class="flex space-x-2 justify-end">
                             <button id="pomo-start-btn" class="px-3 py-1.5 bg-[#00ff9f] text-black text-[9px] font-bold rounded uppercase hover:bg-white transition-all flex-1 sm:flex-none text-center">BAŞLAT</button>
                             <button id="pomo-reset-btn" class="px-3 py-1.5 bg-red-950/40 border border-red-500/30 text-red-400 text-[9px] font-bold rounded uppercase hover:bg-red-500 hover:text-white transition-all">SIFIRLA</button>
@@ -336,6 +337,7 @@
                 <button id="nav-tasks" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-[#00ff9f] border-b-2 border-[#00ff9f] transition-all duration-300 whitespace-nowrap">🎯 GÖREVLER</button>
                 <button id="nav-history" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">📜 GEÇMİŞ</button>
                 <button id="nav-calendar" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🗓️ TAKVİM</button>
+                <button id="nav-tree" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🌳 AĞAÇ</button>
             </div>
 
             <div id="section-tasks" class="space-y-6">
@@ -402,6 +404,10 @@
                                 <label class="text-[9px] text-gray-400 font-bold uppercase block">XP Değeri</label>
                                 <input type="number" id="manual-xp" value="30" min="10" max="100" class="w-full bg-[#050a08] border border-[#00ff9f]/20 text-[#00ff9f] rounded p-2 text-[10px] focus:ring-1 focus:ring-[#00ff9f]">
                             </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-gray-400 font-bold uppercase block">🌳 Yetenek (boş bırakırsan isimden tahmin edilir)</label>
+                            <select id="manual-skill" class="skill-select w-full bg-[#050a08] border border-[#00ff9f]/20 text-[#00ff9f] rounded p-2 text-[10px]"></select>
                         </div>
                         <div class="flex items-center justify-between pt-2">
                             <label class="flex items-center space-x-2 cursor-pointer group">
@@ -508,6 +514,26 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            <div id="section-tree" class="hidden space-y-4">
+                <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-4">
+                    <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3 mb-3">
+                        <div>
+                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🌳 YETENEK AĞACI</h3>
+                            <span class="text-[10px] text-gray-400">Yaptığın her şey bir yeteneği büyütür</span>
+                        </div>
+                        <button id="tree-back-btn" class="hidden text-[10px] border border-[#00ff9f]/30 text-[#00ff9f] px-2 py-1 rounded hover:bg-[#00ff9f]/20">◀ TÜM DALLAR</button>
+                    </div>
+                    <div id="tree-overview" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                    <div id="tree-detail" class="hidden space-y-3">
+                        <div id="tree-detail-header"></div>
+                        <div class="overflow-x-auto bg-[#050a08] border border-[#00ff9f]/10 rounded">
+                            <div id="tree-map"></div>
+                        </div>
+                        <div id="tree-node-info"></div>
+                    </div>
                 </div>
             </div>
 
@@ -633,6 +659,21 @@
         </div>
     </div>
 
+    <div id="skill-picker-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#07110e] border-2 border-[#00ff9f]/50 rounded-lg max-w-sm w-full p-5 space-y-3">
+            <h3 id="skill-picker-title" class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-wider">YETENEK SEÇ</h3>
+            <select id="skill-picker-select" class="skill-select w-full bg-[#050a08] border border-[#00ff9f]/30 text-[#00ff9f] rounded p-2 text-xs"></select>
+            <div id="skill-picker-pct-row" class="hidden flex items-center gap-2">
+                <span class="text-[10px] text-gray-400 font-bold uppercase">Katkı oranı %</span>
+                <input id="skill-picker-pct" type="number" min="5" max="100" value="30" class="w-20 bg-[#050a08] border border-[#00ff9f]/30 text-[#00ff9f] rounded p-1 text-xs text-center">
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button id="skill-picker-cancel" class="flex-1 py-2 border border-gray-600 text-gray-300 text-xs font-bold rounded">VAZGEÇ</button>
+                <button id="skill-picker-ok" class="flex-1 py-2 bg-[#00ff9f] text-black text-xs font-bold rounded hover:bg-white">KAYDET</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -754,7 +795,7 @@
         }
 
         let logIdCounter = 0;
-        function recordActionLog(text, xp, cat) {
+        function recordActionLog(text, xp, cat, skillId = null) {
             if (!localState.actionLogs) localState.actionLogs = [];
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
@@ -767,6 +808,10 @@
                 timeStr
             };
             localState.actionLogs.push(log);
+            if (localState.skillTree?.nodes) {
+                const sid = (skillId && localState.skillTree.nodes[skillId]) ? skillId : guessSkill(text, cat);
+                if (sid) { log.skillId = sid; awardSkillXp(sid, xp || 0); }
+            }
             return log;
         }
 
@@ -846,6 +891,480 @@
             localState.monthlyEarned = getMonthIncome(nowKey);
         }
 
+        // ================== YETENEK AĞACI ==================
+        // Veri: localState.skillTree = { version, nodes: { id: {id,name,icon,parent,kw[],xp,passiveXp,links:[{to,pct}]} } }
+        // Kökler (parent=null) ana dallardır. Sadece yapraklar doğrudan XP kazanır; dalların seviyesi altındakilerin toplamıdır.
+        const SKILL_TREE_VERSION = 1;
+        const ROOT_META = {
+            LRN: ['Öğrenme', '📚'], PRO: ['Üretkenlik', '⚙️'], HLT: ['Sağlık', '💪'],
+            MNT: ['Zihin', '🧠'], FIN: ['Finans', '💰'], SOC: ['Sosyal', '🤝']
+        };
+        // [id, ad, ikon, ebeveyn, anahtar kelimeler]
+        const DEFAULT_SKILLS = [
+            ['lrn-dil', 'Dil', '🗣️', 'LRN', []],
+            ['rusca', 'Rusça', '🇷🇺', 'lrn-dil', ['rusça', 'rusca', 'russian', 'memrise']],
+            ['ingilizce', 'İngilizce', '🇬🇧', 'lrn-dil', ['ingilizce', 'english', 'İngilizce']],
+            ['japonca', 'Japonca', '🇯🇵', 'lrn-dil', ['japonca', 'japanese']],
+            ['lrn-ai', 'Yapay Zeka', '🤖', 'LRN', []],
+            ['prompt', 'Prompt yazma', '💬', 'lrn-ai', ['prompt']],
+            ['claude-code', 'Claude Code / vibecoding', '🧑‍💻', 'lrn-ai', ['claude code', 'vibecoding', 'vibe coding']],
+            ['ai-gorsel', 'AI görsel & video', '🖼️', 'lrn-ai', ['midjourney', 'ai görsel', 'ai video', 'sora', 'runway']],
+            ['otomasyon', 'Otomasyon (n8n, Zapier)', '🔁', 'lrn-ai', ['n8n', 'zapier', 'otomasyon']],
+            ['lrn-tasarim', 'Tasarım', '🎨', 'LRN', []],
+            ['affinity', 'Affinity', '🖌️', 'lrn-tasarim', ['affinity']],
+            ['figma', 'Figma (UI/UX)', '📐', 'lrn-tasarim', ['figma', 'ui/ux', 'ux']],
+            ['tipografi', 'Tipografi & renk', '🔤', 'lrn-tasarim', ['tipografi', 'font', 'renk teorisi']],
+            ['logo', 'Logo & marka kimliği', '🏷️', 'lrn-tasarim', ['logo', 'marka kimliği', 'branding']],
+            ['lrn-video', 'Video & Hareket', '🎬', 'LRN', []],
+            ['davinci', 'DaVinci Resolve', '🎞️', 'lrn-video', ['davinci', 'resolve', 'kurgu']],
+            ['color', 'Renk düzenleme', '🌈', 'lrn-video', ['color grading', 'renk düzenleme']],
+            ['cavalry', 'Cavalry (animasyon)', '🐎', 'lrn-video', ['cavalry', 'animasyon']],
+            ['blender', '3D (Blender)', '🧊', 'lrn-video', ['blender', '3d']],
+            ['lrn-yazilim', 'Yazılım', '💻', 'LRN', []],
+            ['web', 'HTML / CSS / JS', '🌐', 'lrn-yazilim', ['html', 'css', 'javascript']],
+            ['mobil', 'Mobil uygulama (Expo)', '📱', 'lrn-yazilim', ['expo', 'react native', 'mobil uygulama', 'guidto']],
+            ['git', 'Git & GitHub', '🐙', 'lrn-yazilim', ['github', 'git ']],
+            ['db', 'Veritabanı (Firebase)', '🗄️', 'lrn-yazilim', ['firebase', 'veritabanı', 'sql']],
+            ['lrn-pazarlama', 'Pazarlama', '📈', 'LRN', []],
+            ['seo', 'SEO', '🔎', 'lrn-pazarlama', ['seo']],
+            ['aeo', 'AEO (AI aramaları)', '🧭', 'lrn-pazarlama', ['aeo', 'geo']],
+            ['hubspot', 'Sosyal medya (HubSpot)', '📣', 'lrn-pazarlama', ['hubspot', 'sosyal medya kursu']],
+            ['icerik', 'İçerik & metin yazarlığı', '✍️', 'lrn-pazarlama', ['metin yazarlığı', 'copywriting', 'içerik']],
+            ['eticaret', 'E-ticaret', '🛒', 'lrn-pazarlama', ['e-ticaret', 'eticaret']],
+
+            ['odak', 'Odak (pomodoro)', '⏱️', 'PRO', ['odaklanma', 'pomodoro', 'odak']],
+            ['planlama', 'Planlama & takvim', '🗓️', 'PRO', ['planlama', 'sabah ritüeli', 'akşam kapanışı']],
+            ['obsidian', 'İkinci beyin (Obsidian)', '🗃️', 'PRO', ['obsidian', 'ikinci beyin', 'avenox']],
+            ['proje', 'Proje bitirme', '🏁', 'PRO', ['proje', 'teslim']],
+
+            ['calisthenics', 'Calisthenics', '🤸', 'HLT', ['calisthenics', 'kalistenik', 'barfiks', 'şınav', 'sinav', 'dips']],
+            ['gures', 'Güreş / dövüş', '🤼', 'HLT', ['güreş', 'gures', 'dövüş', 'boks', 'mma']],
+            ['kuvvet', 'Kuvvet & esneme', '🏋️', 'HLT', ['esnetme', 'esneme', 'stretch', 'antrenman', 'spor salonu', 'gym']],
+            ['beslenme', 'Beslenme & su', '🥗', 'HLT', ['bardak su', 'öğün', 'beslenme']],
+            ['uyku', 'Uyku', '😴', 'HLT', ['uyku', 'erken yat']],
+
+            ['nefes', 'Nefes (Wim Hof)', '🫁', 'MNT', ['wim hof', 'win hof', 'nefes']],
+            ['meditasyon', 'Meditasyon', '🧘', 'MNT', ['meditasyon']],
+            ['kitap', 'Kitap okuma', '📖', 'MNT', ['kitap', 'sayfa oku', 'okuma']],
+            ['gunluk', 'Günlük yazma', '📓', 'MNT', ['günlük', 'tek cümle']],
+            ['disiplin', 'Disiplin', '🛡️', 'MNT', ['disiplin']],
+
+            ['satis', 'Axl8 & Etsy satışları', '🏎️', 'FIN', ['axl8', 'etsy', 'dolap', 'satış', 'hotwheels']],
+            ['app-gelir', 'Uygulama geliri', '📲', 'FIN', ['uygulama geliri', 'app store']],
+            ['borsa', 'Borsa & yatırım', '📊', 'FIN', ['borsa', 'yatırım', 'hisse']],
+            ['butce', 'Bütçe & birikim', '🐷', 'FIN', ['bütçe', 'birikim']],
+
+            ['iletisim', 'İletişim & hitabet', '🎤', 'SOC', ['hitabet', 'sunum', 'iletişim']],
+            ['network', 'Network', '🕸️', 'SOC', ['network', 'networking']],
+            ['aile', 'Aile & arkadaşlar', '👨‍👩‍👦', 'SOC', ['aile', 'arkadaş']],
+            ['sosyal-medya', 'Sosyal medya varlığı', '📸', 'SOC', ['instagram', 'pinterest', 'paylaşım', 'post']]
+        ];
+        // [kaynak, hedef, yüzde]
+        const DEFAULT_LINKS = [
+            ['calisthenics', 'gures', 30], ['calisthenics', 'kuvvet', 30], ['calisthenics', 'disiplin', 20],
+            ['gures', 'calisthenics', 20], ['gures', 'disiplin', 20],
+            ['ingilizce', 'kitap', 30], ['rusca', 'disiplin', 10], ['japonca', 'disiplin', 10],
+            ['nefes', 'meditasyon', 30], ['nefes', 'disiplin', 20],
+            ['odak', 'disiplin', 20], ['meditasyon', 'disiplin', 10],
+            ['claude-code', 'mobil', 30], ['claude-code', 'prompt', 20],
+            ['mobil', 'web', 20], ['mobil', 'git', 10],
+            ['cavalry', 'blender', 20], ['davinci', 'color', 30],
+            ['affinity', 'logo', 30], ['affinity', 'tipografi', 20], ['figma', 'tipografi', 20],
+            ['seo', 'aeo', 30], ['seo', 'icerik', 20], ['aeo', 'seo', 30],
+            ['hubspot', 'sosyal-medya', 30], ['hubspot', 'icerik', 20],
+            ['eticaret', 'satis', 30], ['iletisim', 'network', 20], ['gunluk', 'icerik', 10]
+        ];
+
+        function skillLevel(xp) {
+            const lvl = Math.floor(Math.sqrt(Math.max(0, xp) / 25)) + 1;
+            const cur = 25 * (lvl - 1) ** 2, next = 25 * lvl ** 2;
+            return { lvl, pct: Math.round(((xp - cur) / (next - cur)) * 100), toNext: next - xp };
+        }
+        function tree() { return localState.skillTree; }
+        function nodesArr() { return Object.values(tree()?.nodes || {}); }
+        function childrenOf(id) { return nodesArr().filter(n => n.parent === id); }
+        function isLeaf(id) { return childrenOf(id).length === 0 && tree().nodes[id]?.parent; }
+        function rootOf(id) { let n = tree().nodes[id]; while (n && n.parent) n = tree().nodes[n.parent]; return n?.id; }
+        function leafIds() { return nodesArr().filter(n => n.parent && childrenOf(n.id).length === 0).map(n => n.id); }
+        function totalXp(id) {
+            const n = tree().nodes[id]; if (!n) return 0;
+            const kids = childrenOf(id);
+            return kids.length ? kids.reduce((s, k) => s + totalXp(k.id), 0) : (n.xp || 0) + (n.passiveXp || 0);
+        }
+        function trLower(s) { return String(s || '').toLocaleLowerCase('tr-TR'); }
+
+        function guessSkill(text, cat) {
+            const t = ' ' + trLower(text) + ' ';
+            let best = null, bestScore = 0;
+            for (const id of leafIds()) {
+                const n = tree().nodes[id];
+                for (const k of (n.kw || [])) {
+                    const kk = trLower(k);
+                    if (kk && t.includes(kk)) {
+                        const score = kk.length + (rootOf(id) === cat ? 3 : 0);
+                        if (score > bestScore) { best = id; bestScore = score; }
+                    }
+                }
+                // yetenek adının kendisi de anahtar kelime sayılır
+                const nm = trLower(n.name);
+                if (nm.length > 3 && t.includes(nm) && nm.length + 1 > bestScore) { best = id; bestScore = nm.length + 1; }
+            }
+            return best;
+        }
+
+        // Bir yaprağa XP ver; pasif bağlantılarına (tek adım) oranında katkı geçer
+        function awardSkillXp(skillId, xp) {
+            const n = tree()?.nodes[skillId];
+            if (!n || !(xp > 0)) return;
+            n.xp = (n.xp || 0) + xp;
+            for (const l of (n.links || [])) {
+                const t = tree().nodes[l.to];
+                if (!t || l.to === skillId) continue;
+                const amt = Math.max(1, Math.round(xp * (l.pct || 0) / 100));
+                t.passiveXp = (t.passiveXp || 0) + amt;
+                t.passiveFrom = t.passiveFrom || {};
+                t.passiveFrom[skillId] = (t.passiveFrom[skillId] || 0) + amt;
+            }
+        }
+
+        function revokeSkillXp(skillId, xp) {
+            const n = tree()?.nodes[skillId];
+            if (!n || !(xp > 0)) return;
+            n.xp = Math.max(0, (n.xp || 0) - xp);
+            for (const l of (n.links || [])) {
+                const t = tree().nodes[l.to]; if (!t) continue;
+                const amt = Math.max(1, Math.round(xp * (l.pct || 0) / 100));
+                t.passiveXp = Math.max(0, (t.passiveXp || 0) - amt);
+                if (t.passiveFrom?.[skillId]) t.passiveFrom[skillId] = Math.max(0, t.passiveFrom[skillId] - amt);
+            }
+        }
+
+        function initSkillTree() {
+            if (localState.skillTree && localState.skillTree.nodes && Object.keys(localState.skillTree.nodes).length) return;
+            const nodes = {};
+            for (const [id, [name, icon]] of Object.entries(ROOT_META)) nodes[id] = { id, name, icon, parent: null, kw: [], xp: 0, passiveXp: 0, links: [] };
+            for (const [id, name, icon, parent, kw] of DEFAULT_SKILLS) nodes[id] = { id, name, icon, parent, kw, xp: 0, passiveXp: 0, links: [] };
+            for (const [from, to, pct] of DEFAULT_LINKS) if (nodes[from] && nodes[to]) nodes[from].links.push({ to, pct });
+            localState.skillTree = { version: SKILL_TREE_VERSION, nodes };
+            // Geçmiş kayıtlardan ağacı doldur, böylece ilk günden dolu görünür
+            for (const l of (localState.actionLogs || [])) {
+                const sid = l.skillId || guessSkill(l.text, l.cat);
+                if (sid) { l.skillId = sid; awardSkillXp(sid, l.xp || 0); }
+            }
+            // mevcut rutin/görevlere tahminle yetenek ata
+            for (const r of [...(localState.routines || []), ...(localState.directives || [])]) {
+                if (!r.skillId) r.skillId = guessSkill(r.text, r.cat) || null;
+            }
+        }
+
+        function skillOptionsHtml(selected, { includeEmpty = true, emptyLabel = '🌳 Yetenek: otomatik tahmin', excludeId = null } = {}) {
+            let html = includeEmpty ? `<option value="">${emptyLabel}</option>` : '';
+            for (const root of nodesArr().filter(n => !n.parent)) {
+                const leaves = leafIds().filter(id => rootOf(id) === root.id && id !== excludeId);
+                if (!leaves.length) continue;
+                html += `<optgroup label="${esc(root.icon + ' ' + root.name)}">` +
+                    leaves.map(id => { const n = tree().nodes[id]; return `<option value="${esc(id)}" ${id === selected ? 'selected' : ''}>${esc(n.icon + ' ' + n.name)}</option>`; }).join('') +
+                    `</optgroup>`;
+            }
+            return html;
+        }
+        function refreshSkillSelects() {
+            for (const id of ['manual-skill', 'pomo-skill']) {
+                const el = document.getElementById(id);
+                if (el) { const v = el.value; el.innerHTML = skillOptionsHtml(v); el.value = v; }
+            }
+        }
+
+        // ---- Yetenek seçici pencere ----
+        let skillPickerCb = null;
+        function openSkillPicker(title, selected, cb, { withPct = false, excludeId = null, allowEmpty = true } = {}) {
+            document.getElementById('skill-picker-title').innerText = title;
+            const sel = document.getElementById('skill-picker-select');
+            sel.innerHTML = skillOptionsHtml(selected, { includeEmpty: allowEmpty, emptyLabel: '— Yetenek yok —', excludeId });
+            document.getElementById('skill-picker-pct-row').classList.toggle('hidden', !withPct);
+            skillPickerCb = cb;
+            document.getElementById('skill-picker-modal').classList.remove('hidden');
+        }
+        document.getElementById('skill-picker-cancel').onclick = () => document.getElementById('skill-picker-modal').classList.add('hidden');
+        document.getElementById('skill-picker-ok').onclick = async () => {
+            const v = document.getElementById('skill-picker-select').value || null;
+            const pct = Math.min(100, Math.max(1, parseInt(document.getElementById('skill-picker-pct').value) || 30));
+            document.getElementById('skill-picker-modal').classList.add('hidden');
+            if (skillPickerCb) await skillPickerCb(v, pct);
+        };
+
+        window.assignSkill = (kind, id) => {
+            const list = kind === 'routine' ? localState.routines : localState.directives;
+            const item = (list || []).find(x => String(x.id) === String(id));
+            if (!item) return;
+            openSkillPicker(`"${item.text}" hangi yeteneği büyütsün?`, item.skillId, async (v) => {
+                item.skillId = v;
+                await securePersistVault();
+                updateDashboardUI();
+            });
+        };
+        function skillTagHtml(item, kind) {
+            const n = item.skillId && tree()?.nodes[item.skillId];
+            return `<button onclick="event.stopPropagation(); window.assignSkill('${kind}','${item.id}')" class="px-1 border border-emerald-400/30 text-emerald-300 rounded text-[9px] hover:bg-emerald-500/20" title="Yetenek bağla">${n ? esc(n.icon + ' ' + n.name) : '🌳 bağla'}</button>`;
+        }
+
+        // ---- Görünüm ----
+        let treeOpenRoot = null;
+        let treeSelected = null;
+
+        function barHtml(pct, h = 'h-1.5') {
+            return `<div class="w-full bg-[#0a1814] ${h} rounded overflow-hidden border border-[#00ff9f]/10"><div class="bg-[#00ff9f] h-full" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>`;
+        }
+
+        function renderSkillTree() {
+            if (!tree()) return;
+            refreshSkillSelects();
+            const overview = document.getElementById('tree-overview');
+            const detail = document.getElementById('tree-detail');
+            const back = document.getElementById('tree-back-btn');
+            if (!overview) return;
+            if (treeOpenRoot && !tree().nodes[treeOpenRoot]) treeOpenRoot = null;
+
+            overview.classList.toggle('hidden', !!treeOpenRoot);
+            detail.classList.toggle('hidden', !treeOpenRoot);
+            back.classList.toggle('hidden', !treeOpenRoot);
+
+            if (!treeOpenRoot) {
+                const roots = nodesArr().filter(n => !n.parent);
+                overview.innerHTML = roots.map(r => {
+                    const xp = totalXp(r.id), L = skillLevel(xp);
+                    const leaves = leafIds().filter(id => rootOf(id) === r.id).map(id => tree().nodes[id]);
+                    const top = leaves.map(n => ({ n, xp: totalXp(n.id) })).filter(o => o.xp > 0).sort((a, b) => b.xp - a.xp).slice(0, 3);
+                    return `<button onclick="window.openTreeRoot('${esc(r.id)}')" class="text-left bg-[#0a1814] border border-[#00ff9f]/15 hover:border-[#00ff9f]/50 rounded p-3 space-y-2 transition-all">
+                        <div class="flex justify-between items-center"><span class="text-sm font-bold text-white">${esc(r.icon)} ${esc(r.name)}</span><span class="text-[10px] text-[#00ff9f] font-mono font-bold">LVL ${L.lvl}</span></div>
+                        ${barHtml(L.pct)}
+                        <div class="text-[10px] text-gray-400 font-mono">${top.length ? top.map(o => `${esc(o.n.icon)} ${esc(o.n.name)} <span class="text-[#00ff9f]">Lv${skillLevel(o.xp).lvl}</span>`).join(' · ') : 'Henüz filizlenmedi 🌱'}</div>
+                        <div class="text-[9px] text-gray-600">${leaves.length} yetenek · ${xp.toLocaleString('tr-TR')} XP · dokun ve dallan ▶</div>
+                    </button>`;
+                }).join('') + `<button onclick="window.addRootBranch()" class="border border-dashed border-[#00ff9f]/30 text-[#00ff9f]/70 hover:text-[#00ff9f] rounded p-3 text-xs font-bold">＋ YENİ ANA DAL</button>`;
+                return;
+            }
+
+            const r = tree().nodes[treeOpenRoot];
+            const rx = totalXp(r.id), RL = skillLevel(rx);
+            document.getElementById('tree-detail-header').innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-base font-bold text-white">${esc(r.icon)} ${esc(r.name)} <span class="text-[11px] text-[#00ff9f] font-mono">LVL ${RL.lvl}</span></span>
+                    <span class="flex gap-1">
+                        <button onclick="window.editNode('${esc(r.id)}')" class="text-[10px] border border-gray-600 text-gray-300 px-2 py-1 rounded">✏️</button>
+                        <button onclick="window.addChild('${esc(r.id)}')" class="text-[10px] border border-[#00ff9f]/40 text-[#00ff9f] px-2 py-1 rounded">＋ DAL/YETENEK</button>
+                    </span>
+                </div>
+                ${barHtml(RL.pct)}
+                <div class="text-[10px] text-gray-500">Bir yeteneğe dokun: bağlantıları ve detayı görünür. Kesikli çizgiler = pasif katkı.</div>`;
+            renderTreeMap(r.id);
+            renderNodeInfo();
+        }
+
+        function renderTreeMap(rootId) {
+            const cols = childrenOf(rootId);
+            const COLW = 104, ROWH = 74, TOP = 54;
+            const pos = {};
+            const avail = document.getElementById('tree-map')?.parentElement?.clientWidth || 340;
+            // Dal ekrana sığmıyorsa kökü sola al (telefonda kesilmesin), sığıyorsa ortala
+            const rootX = cols.length * COLW > avail ? COLW / 2 : Math.max(cols.length * COLW, 320) / 2;
+            pos[rootId] = { x: rootX, y: 30 };
+            let maxRows = 1;
+            cols.forEach((c, i) => {
+                const x = i * COLW + COLW / 2 + Math.max(0, (320 - cols.length * COLW) / 2);
+                pos[c.id] = { x, y: TOP + 50 };
+                const kids = childrenOf(c.id);
+                kids.forEach((k, j) => { pos[k.id] = { x, y: TOP + 50 + (j + 1) * ROWH }; });
+                maxRows = Math.max(maxRows, kids.length + 1);
+            });
+            const W = Math.max(cols.length * COLW, 320), H = TOP + 60 + maxRows * ROWH;
+            const sel = treeSelected && pos[treeSelected] ? treeSelected : null;
+
+            let lines = '';
+            // Gövde: kökten aşağı, yatay bir hat, oradan her sütuna dikey iniş (org-şema düzeni)
+            const busY = TOP + 18;
+            if (cols.length) {
+                const xs = cols.map(c => pos[c.id].x);
+                const anyLit = cols.some(c => totalXp(c.id) > 0);
+                lines += `<line x1="${pos[rootId].x}" y1="${pos[rootId].y + 20}" x2="${pos[rootId].x}" y2="${busY}" stroke="${anyLit ? '#00ff9f' : '#1f3a30'}" stroke-width="2" opacity="0.7"/>`;
+                lines += `<line x1="${Math.min(...xs, pos[rootId].x)}" y1="${busY}" x2="${Math.max(...xs, pos[rootId].x)}" y2="${busY}" stroke="#1f3a30" stroke-width="1.5"/>`;
+                const litXs = cols.filter(c => totalXp(c.id) > 0).map(c => pos[c.id].x);
+                if (litXs.length) lines += `<line x1="${Math.min(...litXs, pos[rootId].x)}" y1="${busY}" x2="${Math.max(...litXs, pos[rootId].x)}" y2="${busY}" stroke="#00ff9f" stroke-width="2" opacity="0.7"/>`;
+            }
+            cols.forEach(c => {
+                const b = pos[c.id];
+                const lit = totalXp(c.id) > 0;
+                lines += `<line x1="${b.x}" y1="${busY}" x2="${b.x}" y2="${b.y - 20}" stroke="${lit ? '#00ff9f' : '#1f3a30'}" stroke-width="${lit ? 2 : 1.5}" opacity="${lit ? 0.7 : 1}"/>`;
+                childrenOf(c.id).forEach(k => {
+                    const p = pos[k.id], prev = { x: p.x, y: p.y - ROWH };
+                    const kl = totalXp(k.id) > 0;
+                    lines += `<line x1="${prev.x}" y1="${prev.y + 20}" x2="${p.x}" y2="${p.y - 20}" stroke="${kl ? '#00ff9f' : '#1f3a30'}" stroke-width="${kl ? 2 : 1.5}" opacity="${kl ? 0.6 : 1}"/>`;
+                });
+            });
+            // pasif bağlantılar (seçili yetenek için; hedef bu dalda değilse kenarda ok)
+            let passive = '';
+            if (sel) {
+                const sn = tree().nodes[sel];
+                const outs = (sn.links || []).map(l => ({ from: sel, to: l.to, pct: l.pct, dir: 'out' }));
+                const ins = nodesArr().flatMap(n => (n.links || []).filter(l => l.to === sel).map(l => ({ from: n.id, to: sel, pct: l.pct, dir: 'in' })));
+                for (const e of [...outs, ...ins]) {
+                    const a = pos[e.from], b = pos[e.to];
+                    if (a && b) {
+                        // Yay, düğümlerin altından geçer; giden ve gelen bağlantılar farklı derinlikte
+                        const bend = e.dir === "out" ? 26 : 46;
+                        const ay = a.y + 40, by = b.y + 40;
+                        const sameCol = Math.abs(a.x - b.x) < 5;
+                        const cx = sameCol ? a.x + bend + 10 : (a.x + b.x) / 2;
+                        const cy = sameCol ? (ay + by) / 2 : Math.max(ay, by) + bend;
+                        const lx = (a.x + 2 * cx + b.x) / 4, ly = (ay + 2 * cy + by) / 4;
+                        passive += `<path d="M${a.x},${ay} Q${cx},${cy} ${b.x},${by}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.9"/>`;
+                        passive += `<rect x="${lx - 16}" y="${ly - 8}" width="32" height="13" rx="3" fill="#050a08"/><text x="${lx}" y="${ly + 2}" fill="#f59e0b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${e.dir === 'out' ? '→' : '←'}%${e.pct}</text>`;
+                    }
+                }
+            }
+            let nodesSvg = '';
+            const drawNode = (id, r) => {
+                const n = tree().nodes[id], p = pos[id];
+                const xp = totalXp(id), L = skillLevel(xp);
+                const active = xp > 0, isSel = id === sel;
+                const stroke = isSel ? '#f59e0b' : active ? '#00ff9f' : '#1f3a30';
+                const label = n.name.length > 13 ? n.name.slice(0, 12) + '…' : n.name;
+                nodesSvg += `<g onclick="window.selectTreeNode('${esc(id)}')" style="cursor:pointer">
+                    <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${active ? '#0a2a1f' : '#0a1210'}" stroke="${stroke}" stroke-width="${isSel ? 3 : 2}"/>
+                    ${active && !n.parent ? '' : ''}
+                    <text x="${p.x}" y="${p.y + 5}" font-size="${r > 20 ? 17 : 14}" text-anchor="middle" opacity="${active ? 1 : 0.4}">${esc(n.icon)}</text>
+                    <text x="${p.x}" y="${p.y + r + 12}" font-size="9" fill="${active ? '#e5fff5' : '#5b6e66'}" text-anchor="middle" font-family="JetBrains Mono">${esc(label)}</text>
+                    <text x="${p.x}" y="${p.y + r + 22}" font-size="8" fill="${active ? '#00ff9f' : '#3b4f47'}" text-anchor="middle" font-family="JetBrains Mono">${active ? 'Lv ' + L.lvl : 'kilitli'}</text>
+                </g>`;
+            };
+            drawNode(rootId, 20);
+            cols.forEach(c => { drawNode(c.id, childrenOf(c.id).length ? 19 : 17); childrenOf(c.id).forEach(k => drawNode(k.id, 16)); });
+            document.getElementById('tree-map').innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;min-width:${W}px">${lines}${passive}${nodesSvg}</svg>`;
+        }
+
+        function renderNodeInfo() {
+            const box = document.getElementById('tree-node-info');
+            const id = treeSelected && tree().nodes[treeSelected] && rootOf(treeSelected) === treeOpenRoot ? treeSelected : null;
+            if (!id) { box.innerHTML = `<div class="text-[10px] text-gray-600 font-mono">Detay için ağaçtan bir yetenek seç.</div>`; return; }
+            const n = tree().nodes[id];
+            const leaf = !!n.parent && childrenOf(id).length === 0;
+            const xp = totalXp(id), L = skillLevel(xp);
+            const outs = (n.links || []).map(l => { const t = tree().nodes[l.to]; return t ? `<div class="flex justify-between items-center text-[10px]"><span class="text-amber-300">↗ ${esc(t.icon)} ${esc(t.name)} <span class="text-gray-500">%${l.pct}</span></span><button onclick="window.removeLink('${esc(id)}','${esc(l.to)}')" class="text-gray-500 hover:text-red-400 px-1">✕</button></div>` : ''; }).join('');
+            const ins = Object.entries(n.passiveFrom || {}).map(([fid, amt]) => { const f = tree().nodes[fid]; return f ? `<div class="text-[10px] text-amber-200/80">↘ ${esc(f.icon)} ${esc(f.name)}'dan +${amt} XP</div>` : ''; }).join('');
+            const recent = (localState.actionLogs || []).filter(l => l.skillId === id).slice(-3).reverse()
+                .map(l => `<div class="text-[10px] text-gray-400 font-mono truncate">${esc(l.dateStr.split('-').reverse().slice(0, 2).join('.'))} · ${esc(l.text)} <span class="text-[#00ff9f]">+${l.xp}</span></div>`).join('');
+            box.innerHTML = `
+            <div class="bg-[#0a1814] border border-amber-500/30 rounded p-3 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-white">${esc(n.icon)} ${esc(n.name)}</span>
+                    <span class="text-[10px] font-mono text-[#00ff9f]">LVL ${L.lvl} · ${xp.toLocaleString('tr-TR')} XP</span>
+                </div>
+                ${barHtml(L.pct)}
+                <div class="text-[9px] text-gray-500 font-mono">Sonraki seviyeye ${L.toNext} XP${leaf ? ` · doğrudan ${n.xp || 0} + pasif ${n.passiveXp || 0}` : ''}</div>
+                ${leaf ? `
+                <div class="pt-1 border-t border-[#00ff9f]/10 space-y-1">
+                    <div class="text-[9px] text-gray-400 font-bold uppercase">Pasif katkı verdiği</div>
+                    ${outs || '<div class="text-[10px] text-gray-600">Yok</div>'}
+                    <button onclick="window.addLink('${esc(id)}')" class="text-[10px] text-amber-300 border border-amber-500/30 rounded px-2 py-0.5 mt-1">＋ katkı bağlantısı</button>
+                </div>
+                ${ins ? `<div class="pt-1 border-t border-[#00ff9f]/10 space-y-1"><div class="text-[9px] text-gray-400 font-bold uppercase">Pasif katkı aldığı</div>${ins}</div>` : ''}
+                ${recent ? `<div class="pt-1 border-t border-[#00ff9f]/10 space-y-1"><div class="text-[9px] text-gray-400 font-bold uppercase">Son eylemler</div>${recent}</div>` : ''}
+                <div class="text-[9px] text-gray-600">Anahtar kelimeler: ${esc((n.kw || []).join(', ') || '—')}</div>` : ''}
+                <div class="flex flex-wrap gap-1 pt-1">
+                    <button onclick="window.editNode('${esc(id)}')" class="text-[10px] border border-gray-600 text-gray-300 px-2 py-1 rounded">✏️ Düzenle</button>
+                    ${n.parent && tree().nodes[n.parent] && !tree().nodes[n.parent].parent ? `<button onclick="window.addChild('${esc(id)}')" class="text-[10px] border border-[#00ff9f]/40 text-[#00ff9f] px-2 py-1 rounded">＋ Alt yetenek</button>` : ''}
+                    ${n.parent ? `<button onclick="window.deleteNode('${esc(id)}')" class="text-[10px] border border-red-500/40 text-red-400 px-2 py-1 rounded">✕ Sil</button>` : ''}
+                </div>
+            </div>`;
+        }
+
+        window.openTreeRoot = (id) => { treeOpenRoot = id; treeSelected = null; playSynthSound('click'); renderSkillTree(); };
+        document.getElementById('tree-back-btn').onclick = () => { treeOpenRoot = null; treeSelected = null; playSynthSound('click'); renderSkillTree(); };
+        window.selectTreeNode = (id) => { treeSelected = treeSelected === id ? null : id; playSynthSound('click'); renderTreeMap(treeOpenRoot); renderNodeInfo(); };
+
+        function newNodeId(name) {
+            let base = trLower(name).replace(/[^a-z0-9ğüşıöç]+/g, '-').replace(/^-|-$/g, '') || 'yetenek';
+            let id = base, i = 2;
+            while (tree().nodes[id]) id = `${base}-${i++}`;
+            return id;
+        }
+        window.addChild = async (parentId) => {
+            const p = tree().nodes[parentId];
+            const name = prompt(`"${p.name}" altına eklenecek dalın / yeteneğin adı:`);
+            if (!name || !name.trim()) return;
+            const icon = prompt("Bir emoji seç (boş bırakabilirsin):", "✨") || "✨";
+            const kwRaw = prompt("Bu yeteneği otomatik tanımak için anahtar kelimeler (virgülle, boş bırakabilirsin):", name.trim()) || "";
+            const id = newNodeId(name);
+            tree().nodes[id] = { id, name: name.trim(), icon: icon.trim(), parent: parentId, kw: kwRaw.split(',').map(s => s.trim()).filter(Boolean), xp: 0, passiveXp: 0, links: [] };
+            // yaprak olan bir dala çocuk eklenirse, eski XP'si yeni çocuğa taşınır (kaybolmasın)
+            if (p.parent && childrenOf(parentId).length === 1) {
+                const c = tree().nodes[id];
+                c.xp = p.xp || 0; c.passiveXp = p.passiveXp || 0; c.passiveFrom = p.passiveFrom; c.links = p.links || []; c.kw = c.kw.concat(p.kw || []);
+                p.xp = 0; p.passiveXp = 0; p.passiveFrom = {}; p.links = []; p.kw = [];
+                for (const m of nodesArr()) for (const l of (m.links || [])) if (l.to === parentId) l.to = id;
+                for (const r of [...(localState.routines || []), ...(localState.directives || []), ...(localState.actionLogs || [])]) if (r.skillId === parentId) r.skillId = id;
+            }
+            treeSelected = id;
+            playSynthSound('success');
+            await securePersistVault();
+            updateDashboardUI();
+        };
+        window.addRootBranch = async () => {
+            const name = prompt("Yeni ana dalın adı (örn: Sanat, Müzik):");
+            if (!name || !name.trim()) return;
+            const icon = prompt("Bir emoji seç:", "🌟") || "🌟";
+            const id = newNodeId(name);
+            tree().nodes[id] = { id, name: name.trim(), icon: icon.trim(), parent: null, kw: [], xp: 0, passiveXp: 0, links: [] };
+            treeOpenRoot = id;
+            await securePersistVault();
+            updateDashboardUI();
+        };
+        window.editNode = async (id) => {
+            const n = tree().nodes[id];
+            const name = prompt("Ad:", n.name); if (name === null) return;
+            const icon = prompt("Emoji:", n.icon); if (icon === null) return;
+            if (name.trim()) n.name = name.trim();
+            if (icon.trim()) n.icon = icon.trim();
+            if (n.parent && childrenOf(id).length === 0) {
+                const kw = prompt("Anahtar kelimeler (virgülle):", (n.kw || []).join(', '));
+                if (kw !== null) n.kw = kw.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            await securePersistVault();
+            updateDashboardUI();
+        };
+        window.deleteNode = async (id) => {
+            const n = tree().nodes[id];
+            const kids = childrenOf(id);
+            if (!confirm(`"${n.name}"${kids.length ? ` ve altındaki ${kids.length} yetenek` : ''} silinsin mi? Kazanılan yetenek XP'si de silinir (genel XP'n etkilenmez).`)) return;
+            const del = [id, ...kids.map(k => k.id)];
+            for (const d of del) delete tree().nodes[d];
+            for (const m of nodesArr()) {
+                m.links = (m.links || []).filter(l => !del.includes(l.to));
+                if (m.passiveFrom) for (const d of del) delete m.passiveFrom[d];
+            }
+            for (const r of [...(localState.routines || []), ...(localState.directives || [])]) if (del.includes(r.skillId)) r.skillId = null;
+            treeSelected = null;
+            await securePersistVault();
+            updateDashboardUI();
+        };
+        window.addLink = (id) => {
+            openSkillPicker(`"${tree().nodes[id].name}" hangi yeteneğe pasif katkı versin?`, null, async (to, pct) => {
+                if (!to || to === id) return;
+                const n = tree().nodes[id];
+                n.links = (n.links || []).filter(l => l.to !== to);
+                n.links.push({ to, pct });
+                await securePersistVault();
+                updateDashboardUI();
+            }, { withPct: true, excludeId: id, allowEmpty: false });
+        };
+        window.removeLink = async (id, to) => {
+            const n = tree().nodes[id];
+            n.links = (n.links || []).filter(l => l.to !== to);
+            await securePersistVault();
+            updateDashboardUI();
+        };
+        // ================== /YETENEK AĞACI ==================
+
         function sanitizeData() {
             if (localState.directives) {
                 localState.directives = localState.directives.filter(d => 
@@ -873,6 +1392,7 @@
             if (!localState.dayNotes) localState.dayNotes = {};
             if (!localState.streak) localState.streak = { current: 0, lastActiveDate: "", dailyCompleted: false, shields: 1 };
             migrateIncomeLedger();
+            initSkillTree();
         }
 
         function loadLocalVault() {
@@ -1159,6 +1679,7 @@
                     if (useCloud) {
                         saveSnapshot("buluttan önce", true); // yerel veriyi kaybetmeden önce yedekle
                         localState = Object.assign(localState, cloudData);
+                        if (!cloudData.skillTree) delete localState.skillTree; // ağacı buluttaki kayıtlardan yeniden kur
                         if (!cloudData.incomeMigrated) {
                             // Bulutta eski formatta veri var: gelir defterini buluttaki kayıtlardan yeniden kur
                             localState.incomeMigrated = false;
@@ -1212,6 +1733,7 @@
                 remaining: nextLevelMinXp - totalXp
             };
         }
+
 
         function updateDashboardUI() {
             if (currentUser) {
@@ -1279,6 +1801,7 @@
             renderActivityHeatmap();
             renderDeadlines();
             renderIncomePanels();
+            renderSkillTree();
         }
 
         function renderIncomePanels() {
@@ -1320,6 +1843,8 @@
             if (!confirm(`"${entry.source}" (+${entry.amount} ₺) kaydı silinsin mi? Kazandırdığı XP de geri alınır.`)) return;
             localState.incomeEntries = localState.incomeEntries.filter(e => String(e.id) !== String(id));
             if (entry.logId != null) {
+                const theLog = (localState.actionLogs || []).find(l => String(l.id) === String(entry.logId));
+                if (theLog?.skillId) revokeSkillXp(theLog.skillId, theLog.xp || 0);
                 const before = (localState.actionLogs || []).length;
                 localState.actionLogs = (localState.actionLogs || []).filter(l => String(l.id) !== String(entry.logId));
                 if (localState.actionLogs.length < before) localState.xp = Math.max(0, (localState.xp || 0) - (entry.xp || 0));
@@ -1453,6 +1978,7 @@
                             <span class="px-1 border border-[#00ff9f]/30 rounded">${d.cat}</span>
                             ${d.subcat ? `<span class="px-1 border border-blue-400/30 text-blue-400 rounded">${d.subcat}</span>` : ''}
                             <span>+${d.xp} XP</span>
+                            ${skillTagHtml(d, 'task')}
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
@@ -1484,7 +2010,7 @@
                 <div class="${isCompletedToday ? 'bg-[#050a08] opacity-50 border-gray-800' : 'bg-[#0a1814] border-yellow-500/20'} border p-2.5 rounded flex items-center justify-between transition-all group">
                     <div>
                         <div class="text-xs font-bold ${isCompletedToday ? 'text-gray-500 line-through' : 'text-yellow-300'}">${esc(r.text)}</div>
-                        <div class="text-[9px] text-gray-400 mt-0.5">${r.cat}${r.subcat ? ` + ${r.subcat}` : ''} • +${r.xp} XP</div>
+                        <div class="text-[9px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-1"><span>${r.cat}${r.subcat ? ` + ${r.subcat}` : ''} • +${r.xp} XP</span>${skillTagHtml(r, 'routine')}</div>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button class="text-gray-600 hover:text-red-500 px-2 transition-colors opacity-0 group-hover:opacity-100" onclick="window.deleteRoutine('${r.id}')" title="Sil">✕</button>
@@ -1509,7 +2035,7 @@
                 increaseStat(task.cat, 15);
                 if (task.subcat) increaseStat(task.subcat, 5);
                 
-                recordActionLog(`[GÖREV] ${task.text}`, task.xp, task.cat);
+                recordActionLog(`[GÖREV] ${task.text}`, task.xp, task.cat, task.skillId);
                 recordStreakAction(); 
                 playSynthSound('success');
                 writeLog(`[GÖREV] "${task.text}" tamamlandı.`);
@@ -1533,7 +2059,7 @@
                 
                 routine.lastCompletedDate = getTodayStr();
 
-                recordActionLog(`[RUTİN] ${routine.text}`, routine.xp, routine.cat);
+                recordActionLog(`[RUTİN] ${routine.text}`, routine.xp, routine.cat, routine.skillId);
                 recordStreakAction(); 
                 playSynthSound('success');
                 writeLog(`[RUTİN] "${routine.text}" yapıldı.`);
@@ -1780,7 +2306,7 @@
             list.innerHTML = localState.actionLogs.slice(-40).reverse().map(l => `
                 <div class="bg-[#050a08] border border-[#00ff9f]/10 p-2 rounded text-[10px] flex justify-between items-center">
                     <div>
-                        <span class="text-gray-500 font-mono">[${l.timeStr || l.time || '--:--'}]</span>
+                        <span class="text-gray-500 font-mono">[${l.dateStr ? esc(l.dateStr.split('-').reverse().slice(0, 2).join('.')) + ' ' : ''}${l.timeStr || l.time || '--:--'}]</span>
                         <span class="text-white font-bold ml-1">${esc(l.text)}</span>
                     </div>
                     <span class="text-[#00ff9f] font-mono font-bold">+${l.xp} XP</span>
@@ -1800,7 +2326,8 @@
                 return;
             }
 
-            const item = { id: Date.now(), text, cat, subcat, xp, lastCompletedDate: null };
+            const chosenSkill = document.getElementById('manual-skill')?.value || null;
+            const item = { id: Date.now(), text, cat, subcat, xp, lastCompletedDate: null, skillId: chosenSkill || guessSkill(text, cat) || null };
             if (isRoutine) {
                 if (!localState.routines) localState.routines = [];
                 localState.routines.push(item);
@@ -1907,7 +2434,7 @@
                 cell.innerHTML = `
                     <span class="block text-right w-full">${day}</span>
                     <div class="flex flex-col items-center justify-end h-full w-full pt-1">
-                        ${hasActivity ? `<span class="px-1 py-0.5 bg-[#00ff9f]/20 text-[#00ff9f] text-[7px] sm:text-[8px] rounded border border-[#00ff9f]/30 max-w-full truncate overflow-hidden">${dayLogs.length} İşlem</span>` : `<span class="h-3"></span>`}
+                        ${hasActivity ? `<span class="px-1 py-0.5 bg-[#00ff9f]/20 text-[#00ff9f] text-[7px] sm:text-[8px] rounded border border-[#00ff9f]/30 max-w-full truncate overflow-hidden">⚡${dayLogs.length}</span>` : `<span class="h-3"></span>`}
                     </div>
                 `;
 
@@ -2127,7 +2654,7 @@
                         
                         localState.xp = (localState.xp || 0) + minutes;
                         increaseStat(cat, 10);
-                        recordActionLog(`⏱️ ${minutes} Dk Siber Odaklanma`, minutes, cat);
+                        recordActionLog(`⏱️ ${minutes} Dk Siber Odaklanma`, minutes, cat, document.getElementById('pomo-skill')?.value || null);
                         recordStreakAction(); 
                         
                         playSynthSound('success');
@@ -2148,7 +2675,7 @@
             formatPomoDisplay();
         };
 
-        const tabs = ['tasks', 'history', 'calendar'];
+        const tabs = ['tasks', 'history', 'calendar', 'tree'];
         tabs.forEach(t => {
             const btn = document.getElementById(`nav-${t}`);
             if (!btn) return;
