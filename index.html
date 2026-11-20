@@ -1388,20 +1388,34 @@
             const pos = {};
             const roots = nodesArr().filter(n => !n.parent);
             const vis = Object.fromEntries(roots.map(r => [r.id, visibleLeaves(r.id)]));
-            // Simetrik düzen: her ana alan eşit bir dilim alır (ilk alan tam üstte),
-            // yetenekler kendi alanının açısı etrafında eşit aralıklarla ortalanır.
-            const span = 360 / Math.max(1, roots.length);
+            // Her ana alan, açık yetenek sayısına göre dilim alır (hepsi eşitse tam simetrik);
+            // yetenekler kendi alanının açısı etrafında eşit aralıklarla, simetrik dizilir.
+            // her alana ihtiyacı kadar dilim (yetenek başına ~15°, en az 40°); artan yer eşit paylaşılır
+            const need = roots.map(r => Math.max(40, vis[r.id].length * 15));
+            // su doldurma: küçük alanlar ihtiyacını tam alır, kalan yer kalabalık olanlara paylaşılır
+            const spans = new Array(roots.length);
+            let left = 360, rest = roots.map((_, i) => i).sort((a, b) => need[a] - need[b]);
+            while (rest.length) {
+                const fair = left / rest.length, i = rest[0];
+                if (need[i] <= fair) { spans[i] = need[i]; left -= need[i]; rest.shift(); }
+                else { rest.forEach(k => spans[k] = fair); break; }
+            }
+            const extra = left > 0 && spans.every((x, i) => x === need[i]) ? left / roots.length : 0;
+            if (extra) for (let i = 0; i < spans.length; i++) spans[i] += extra;
+            let acc = -spans[0] / 2;
             roots.forEach((r, i) => {
-                const mid = i * span;
+                const span = spans[i];
+                const mid = acc + span / 2; acc += span;
                 pos[r.id] = { ...polar(HUB_R, mid), a: mid, r: HUB_R, depth: 1, parent: null, root: r.id };
                 const leaves = vis[r.id];
                 const n = leaves.length;
-                const step = Math.min(span * 0.9 / Math.max(1, n), 20);
+                const step = Math.min(span * 0.88 / Math.max(1, n), 20);
+                // kalabalıksa: yetenekler tek sırada, aralarına sığacak kadar dışarıda; isimler ışın boyunca
                 const crowded = step < 13;
+                const lr = crowded ? Math.max(LEAF_R, 34 / (step * Math.PI / 180)) : LEAF_R;
                 leaves.forEach((id, j) => {
                     const la = mid + (j - (n - 1) / 2) * step;
-                    const lr = crowded && j % 2 ? LEAF_R2 : LEAF_R;
-                    pos[id] = { ...polar(lr, la), a: la, r: lr, depth: 2, parent: r.id, root: r.id };
+                    pos[id] = { ...polar(lr, la), a: la, r: lr, depth: 2, parent: r.id, root: r.id, radial: crowded };
                 });
             });
             return pos;
@@ -1412,11 +1426,19 @@
             if (!wrap) return;
             const pos = layoutTree();
             treeLayoutCache = pos;
-            const hasOuter = Object.values(pos).some(p => p.r === LEAF_R2);
-            const ORBIT = (hasOuter ? LEAF_R2 : LEAF_R) + 62;
-            const ext = ORBIT + 70;
-            const bounds = { x: -ext - 110, y: -ext - 10, w: (ext + 110) * 2, h: ext * 2 + 20 }; // yanlarda isimler için pay
-            const boundsChanged = !treeFull || Math.abs(treeFull.w - bounds.w) > 1;
+            const hasOuter = false;
+            const ORBIT = Math.max(LEAF_R, ...Object.values(pos).map(p => p.r)) + 62;
+            // görünüm: içeriğin gerçek kapladığı alan (isimler dahil)
+            let bx0 = -ORBIT - 20, bx1 = ORBIT + 20, by0 = -ORBIT - 20, by1 = ORBIT + 20;
+            for (const p of Object.values(pos)) {
+                const far = polar(p.r + (p.radial ? 170 : 40), p.a);
+                const padX = p.radial ? 0 : 120;
+                bx0 = Math.min(bx0, far.x - padX); bx1 = Math.max(bx1, far.x + padX);
+                by0 = Math.min(by0, far.y - 20); by1 = Math.max(by1, far.y + 24);
+            }
+            const half = Math.max(-bx0, bx1);
+            const bounds = { x: -half, y: by0, w: half * 2, h: by1 - by0 };
+            const boundsChanged = !treeFull || Math.abs(treeFull.w - bounds.w) > 1 || Math.abs(treeFull.h - bounds.h) > 1 || Math.abs(treeFull.y - bounds.y) > 1;
             treeFull = bounds;
             const box = wrap.parentElement;
             if (box && box.clientWidth) box.style.height = Math.round(Math.max(340, Math.min(window.innerHeight * 0.62, box.clientWidth))) + 'px';
@@ -1466,7 +1488,12 @@
             // düğümler
             const labelFor = (p, r) => {
                 // isim, düğümün dış tarafına (merkezden uzağa) yazılır
-                const out = polar(p.r + r + 16, p.a);
+                const out = polar(p.r + r + (p.radial ? 8 : 16), p.a);
+                if (p.radial) {
+                    const right = out.x >= 0;
+                    const deg = right ? p.a - 90 : p.a + 90;
+                    return { x: out.x, y: out.y, anchor: right ? 'start' : 'end', extra: `dominant-baseline="central" transform="rotate(${deg.toFixed(1)} ${out.x.toFixed(1)} ${out.y.toFixed(1)})"` };
+                }
                 const anchor = Math.abs(out.x) < 12 ? 'middle' : out.x > 0 ? 'start' : 'end';
                 const dy = out.y < -10 ? -4 : out.y > 10 ? 12 : 4;
                 return { x: out.x, y: out.y + dy, anchor };
@@ -1478,7 +1505,7 @@
                     nodes += `<g data-node="${esc(id)}" style="cursor:pointer">
                         <circle cx="${p.x}" cy="${p.y}" r="14" fill="#0a1210" stroke="#3b4f47" stroke-width="1.5" stroke-dasharray="3 3"/>
                         <text x="${p.x}" y="${p.y + 4}" font-size="11" fill="#8aa89c" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">${m.expanded ? '−' : '+' + m.hidden}</text>
-                        <text x="${L.x}" y="${L.y}" font-size="11" fill="#5b6e66" text-anchor="${L.anchor}" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${m.expanded ? 'gizle' : 'keşfedilmedi'}</text>
+                        <text x="${L.x}" y="${L.y}" ${L.extra || ''} font-size="11" fill="#5b6e66" text-anchor="${L.anchor}" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${m.expanded ? 'gizle' : 'keşfedilmedi'}</text>
                     </g>`;
                     continue;
                 }
@@ -1495,7 +1522,7 @@
                     <text x="${p.x}" y="${p.y + r * 0.36}" font-size="${r * 0.95}" text-anchor="middle" opacity="${isLit ? 1 : 0.4}">${esc(n.icon)}</text>
                     ${p.depth === 1
                         ? `<text x="${p.x}" y="${p.y + r + 18}" font-size="15" font-weight="800" fill="${isLit ? col : '#4a5f57'}" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="5">${esc(n.name)}${isLit ? ' ' + Lv.lvl : ''}${treeCollapsed.has(id) ? ' ▸' : ''}</text>${treeCollapsed.has(id) && leavesUnder(id).filter(x => x !== id && totalXp(x) > 0).length ? `<text x="${p.x}" y="${p.y + r + 34}" font-size="11" fill="#6b8078" text-anchor="middle" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${leavesUnder(id).filter(x => x !== id && totalXp(x) > 0).length} yetenek kapalı</text>` : ''}`
-                        : `<text x="${L.x}" y="${L.y}" font-size="13" font-weight="600" fill="${isSel ? '#f59e0b' : isLit ? '#e5fff5' : '#6b8078'}" text-anchor="${L.anchor}" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${esc(nm)}${isLit ? ' · ' + Lv.lvl : ''}</text>`}
+                        : `<text x="${L.x}" y="${L.y}" ${L.extra || ''} font-size="13" font-weight="600" fill="${isSel ? '#f59e0b' : isLit ? '#e5fff5' : '#6b8078'}" text-anchor="${L.anchor}" font-family="JetBrains Mono" paint-order="stroke" stroke="#050a08" stroke-width="4">${esc(nm)}${isLit ? ' · ' + Lv.lvl : ''}</text>`}
                 </g>`;
             }
             const mainLvl = calculateLevelDetails(localState.xp || 0).level;
