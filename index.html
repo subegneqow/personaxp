@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon-192.png">
     <title>PERSONAXP // TELEMETRY TERMINAL</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         body { 
             background-color: #050a08; 
@@ -76,11 +76,61 @@
         /* Telefon: altta sabit menü, her sekme kendi ekranı */
         @media (max-width: 767px) {
             #tab-nav { display: none; }
-            body { padding-bottom: 84px !important; }
-            body[data-tab="home"] #right-col { display: none; }
-            body:not([data-tab="home"]) #left-col, body:not([data-tab="home"]) #income-wrap { display: none; }
+            body { padding-bottom: 96px !important; }
+            header > div:first-child, header > div:nth-child(3) { display: none !important; }
+            header { border: 0 !important; background: transparent !important; padding: 20px 20px 4px !important; }
             main { gap: 1rem !important; }
+            /* Bugün: profil kartı, seri, gelir, kritik hedefler, rutin ve görevler */
+            body[data-tab="home"] #profile-settings, body[data-tab="home"] #bio-counter-card, body[data-tab="home"] #pomodoro-card, body[data-tab="home"] #radar-card { display: none; }
+            body[data-tab="home"] #normal-tasks-container > #creator-card { display: none; }
+            /* Profil: profil kartı, ayarlar, radar, araçlar ve geçmiş */
+            body[data-tab="profile"] #streak-card, body[data-tab="profile"] #deadline-card, body[data-tab="profile"] #income-wrap { display: none; }
+            body[data-tab="profile"] #left-col, body[data-tab="profile"] #right-col { display: block; }
+            body[data-tab="profile"] #left-col > * + * { margin-top: 1rem; }
+            /* Diğer sekmeler: sol sütun ve gelir gizli */
+            body[data-tab="calendar"] #left-col, body[data-tab="tree"] #left-col, body[data-tab="coach"] #left-col,
+            body[data-tab="calendar"] #income-wrap, body[data-tab="tree"] #income-wrap, body[data-tab="coach"] #income-wrap { display: none; }
+            body:not([data-tab="home"]) #fab-add { display: none; }
+            #income-quick-row { display: none !important; } /* telefonda gelir ＋ düğmesinden eklenir */
+            body[data-tab="profile"] #left-col { display: flex !important; flex-direction: column; gap: 1rem; }
+            body[data-tab="profile"] #left-col > * + * { margin-top: 0; }
+            body[data-tab="profile"] #profile-card { order: -2; }
+            body[data-tab="profile"] #profile-settings { order: -1; }
+            body[data-tab="profile"] #right-col { margin-top: 1rem; }
+            /* Bugün ekranında kart sırası: profil, seri, rutinler, görevler, enerji, kritik hedefler */
+            body[data-tab="home"] main { display: flex !important; flex-direction: column; }
+            body[data-tab="home"] #left-col, body[data-tab="home"] #right-col, body[data-tab="home"] #section-tasks, body[data-tab="home"] #normal-tasks-container { display: contents; }
+            body[data-tab="home"] #profile-card { order: 1; }
+            body[data-tab="home"] #streak-card { order: 2; }
+            body[data-tab="home"] #routines-card { order: 3; }
+            body[data-tab="home"] #tasks-card { order: 4; }
+            body[data-tab="home"] #energy-card, body[data-tab="home"] #low-battery-panel { order: 5; }
+            body[data-tab="home"] #deadline-card { order: 6; }
         }
+        .ps-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 52px; font-size: 15px; color: #f2f4f5; text-align: left; border-bottom: 1px solid #22292d; }
+        .ps-row:last-child { border-bottom: 0; }
+        .ps-row span { flex: 1; }
+        .ps-row b { color: #5c656b; font-size: 20px; font-weight: 400; }
+
+        /* ===== B TEMASI (modern, sade) ===== */
+        body { background: #0b0d0f !important; font-family: Inter, -apple-system, system-ui, sans-serif !important; color: #f2f4f5; }
+        .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
+        .scanline { display: none !important; }
+        [class*="bg-[#07110e]"], [class*="bg-[#0a1814]"] { background-color: #14181b !important; }
+        [class*="bg-[#050a08]"], [class*="bg-[#0a1210]"], [class*="bg-[#0a1411]"] { background-color: #0f1316 !important; }
+        [class*="border-[#00ff9f]"], [class*="border-emerald-500"], [class*="border-cyan-500"], [class*="border-red-500/3"], [class*="border-amber-500/3"], [class*="border-amber-500/4"], [class*="border-purple-"], [class*="border-emerald-400"] { border-color: #22292d !important; }
+        [class*="shadow-[0_0"] { box-shadow: none !important; }
+        .rounded { border-radius: 12px !important; }
+        .rounded-t { border-radius: 16px 16px 0 0 !important; }
+        #profile-card, #deadline-card, #bio-counter-card, #pomodoro-card, #streak-card, #radar-card, #energy-card, #creator-card, #routines-card, #tasks-card, #profile-settings,
+        #income-wrap > div, #section-history > div, #section-tree > div, #section-coach > div, #section-calendar > div > div { border-radius: 20px !important; }
+        [class*="text-[#00ff9f]"] { color: #34d399 !important; }
+        .bg-\[\#00ff9f\] { background-color: #34d399 !important; }
+        h3 { text-transform: none !important; letter-spacing: -0.01em !important; font-family: Inter, system-ui, sans-serif !important; font-size: 17px !important; font-weight: 700 !important; color: #ffffff !important; }
+        [class*="tracking-"] { letter-spacing: normal !important; }
+        input, select, textarea { border-radius: 12px !important; border-color: #22292d !important; }
+        #tab-nav button { font-family: Inter, system-ui, sans-serif; font-size: 13px !important; text-transform: none !important; }
+        header { background: #0b0d0f !important; border-color: #1a1f22 !important; }
         /* Takvim (Google Takvim tarzı) */
         .cal-cell { min-height: 108px; }
         .cal-chip { background: color-mix(in srgb, var(--c) 22%, transparent); border-left: 3px solid var(--c); border-radius: 4px; padding: 1px 4px; font-size: 11px; line-height: 1.35; color: #e8fff5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -121,7 +171,11 @@
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ff9f] opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-3 w-3 bg-[#00ff9f]"></span>
             </span>
-            <h1 class="text-[#00ff9f] font-bold tracking-[0.25em] text-xs sm:text-sm md:text-base uppercase glow-green">PERSONAXP // TELEMETRY TERMINAL</h1>
+            <h1 class="text-[#00ff9f] font-bold tracking-[0.25em] text-xs sm:text-sm md:text-base uppercase glow-green">PERSONAXP</h1>
+        </div>
+        <div id="m-greet" class="md:hidden">
+            <div id="m-greet-date" class="text-[13px] text-[#8a9299] font-medium"></div>
+            <div id="m-greet-text" class="text-[28px] font-extrabold text-white leading-tight" style="letter-spacing:-0.02em">Merhaba</div>
         </div>
         <div class="flex items-center space-x-2">
             <button id="checkin-btn" class="text-xs border border-amber-500/50 bg-amber-950/30 px-3 py-1.5 hover:bg-amber-900/50 text-amber-300 rounded font-bold transition-all flex items-center space-x-1 glow-gold cursor-pointer">
@@ -155,7 +209,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <span class="text-base">💰</span>
-                            <h3 class="text-xs text-emerald-400 font-bold uppercase tracking-wider">AYLIK GELİR PUSULASI <span id="income-month-label" class="text-emerald-300/70"></span></h3>
+                            <h3 class="text-xs text-emerald-400 font-bold uppercase tracking-wider">Aylık gelir <span id="income-month-label" class="text-emerald-300/70"></span></h3>
                             <button id="income-history-toggle" class="text-[9px] border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded hover:bg-emerald-500/20">📜 KAYITLAR</button>
                             <button onclick="window.openMonthlyReport()" class="text-[9px] border border-purple-400/40 text-purple-300 px-1.5 py-0.5 rounded hover:bg-purple-500/20">📅 AYLIK KARNE</button>
                         </div>
@@ -175,7 +229,7 @@
                     </div>
                 </div>
                 
-                <div class="mt-3 pt-3 border-t border-emerald-500/20 flex items-center justify-between gap-2">
+                <div id="income-quick-row" class="mt-3 pt-3 border-t border-emerald-500/20 flex items-center justify-between gap-2">
                     <span class="text-[9px] text-emerald-400 font-bold uppercase hidden sm:block">HIZLI CİRO EKLE:</span>
                     <input type="text" id="quick-income-source" placeholder="Satış Kaynağı (Örn: Dolap - Hotwheels)" class="flex-1 bg-[#050a08] border border-emerald-500/20 text-white rounded p-1 text-[10px] focus:ring-emerald-400 h-7">
                     <input type="number" id="quick-income-amount" placeholder="₺ Miktar" class="w-20 bg-[#050a08] border border-emerald-500/20 text-emerald-300 rounded p-1 text-[10px] font-mono focus:ring-emerald-400 h-7 text-center">
@@ -209,9 +263,17 @@
     <main class="p-4 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 mt-2 relative z-10">
         
         <div id="left-col" class="md:col-span-5 space-y-6">
+            <div id="profile-settings" class="md:hidden bg-[#07110e] rounded overflow-hidden">
+                <button onclick="document.getElementById('debrief-btn').click()" class="ps-row">📊 <span>Haftalık karne</span><b>›</b></button>
+                <button onclick="window.openMonthlyReport()" class="ps-row">📅 <span>Aylık karne</span><b>›</b></button>
+                <button onclick="document.getElementById('reminder-btn').click()" class="ps-row">🔔 <span>Hatırlatmalar</span><b>›</b></button>
+                <button onclick="document.getElementById('checkin-btn').click()" class="ps-row">⚡ <span>30 sn ritüel</span><b>›</b></button>
+                <button onclick="document.getElementById('backup-btn').click()" class="ps-row">💾 <span>Veri kasası (yedek)</span><b>›</b></button>
+                <button onclick="document.getElementById('auth-btn').click()" class="ps-row">👤 <span id="ps-auth-label">Hesap</span><b>›</b></button>
+            </div>
             
             <div id="profile-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-2 text-[10px] text-gray-500 font-bold">GELİŞİM PROTOKOLÜ</div>
+                <div class="absolute top-0 right-0 p-2 text-[10px] text-gray-500 font-bold">Profil</div>
                 <div class="flex items-center space-x-4">
                     <div class="relative">
                         <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Alp" alt="User Avatar" class="w-16 h-16 rounded border border-[#00ff9f]/30 bg-[#0a1814]" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=Alp'">
@@ -246,7 +308,7 @@
                 <div class="flex justify-between items-center border-b border-red-500/20 pb-2 mb-3">
                     <div class="flex items-center space-x-2">
                         <span class="text-base animate-pulse">🎯</span>
-                        <h3 class="text-xs text-red-400 font-bold uppercase tracking-wider glow-red">KRİTİK HEDEFLER & GERİ SAYIM</h3>
+                        <h3 class="text-xs text-red-400 font-bold uppercase tracking-wider glow-red">Kritik hedefler</h3>
                     </div>
                 </div>
                 
@@ -266,7 +328,7 @@
                 <div class="flex justify-between items-center border-b border-cyan-500/20 pb-2">
                     <div class="flex items-center space-x-2">
                         <span class="text-base">🔋</span>
-                        <h3 class="text-xs text-cyan-400 font-bold uppercase tracking-wider">1-TIK BİYO-SAYAÇ // VARDİYA & SAĞLIK</h3>
+                        <h3 class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Biyo-sayaç</h3>
                     </div>
                     <span class="text-[8px] px-1.5 py-0.5 bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 font-bold rounded">SIFIR FORM, SAF HLT</span>
                 </div>
@@ -310,7 +372,7 @@
                 <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-2">
                     <div class="flex items-center space-x-2">
                         <span class="text-base">⏱️</span>
-                        <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">SİBER ODAKLANMA ZAMANLAYICISI</h3>
+                        <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">Odak zamanlayıcı</h3>
                     </div>
                     <span id="pomo-xp-badge" class="text-[8px] px-1.5 py-0.5 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] font-bold rounded font-mono">+25 XP (1 DK = 1 XP)</span>
                 </div>
@@ -341,7 +403,7 @@
             <div id="streak-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 relative overflow-hidden space-y-4">
                 <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-2">
                     <div class="space-y-1">
-                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">GÜNLÜK SERİ</span>
+                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest block">Günlük seri</span>
                         <div class="flex items-center space-x-2">
                             <span id="streak-count" class="text-2xl font-black text-[#00ff9f] glow-green">🔥 0 GÜN</span>
                         </div>
@@ -355,14 +417,14 @@
                     </div>
                 </div>
                 <div class="space-y-2">
-                    <h3 class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">🟩 AKTİVİTE MATRİSİ (SON 30 GÜN)</h3>
+                    <h3 class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Son 30 gün</h3>
                     <div id="activity-heatmap-grid" class="grid grid-cols-10 gap-1.5 p-1.5 bg-[#050a08] rounded border border-[#00ff9f]/10"></div>
                 </div>
             </div>
 
-            <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 flex flex-col items-center relative min-h-[300px] justify-center">
+            <div id="radar-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 flex flex-col items-center relative min-h-[300px] justify-center">
                 <div class="flex justify-between items-center w-full mb-3 absolute top-5 left-5">
-                    <h3 class="text-xs text-gray-400 font-bold uppercase tracking-wider">NEURAL BALANCE INDEX</h3>
+                    <h3 class="text-xs text-gray-400 font-bold uppercase tracking-wider">Denge radarı</h3>
                 </div>
                 <div class="relative w-full flex justify-center items-center mt-6">
                     <canvas id="radarCanvas" width="280" height="280"></canvas>
@@ -375,20 +437,20 @@
         <div id="right-col" class="md:col-span-7 space-y-6">
             
             <div id="tab-nav" class="flex border-b border-[#00ff9f]/20 bg-[#07110e] p-1 rounded-t overflow-x-auto">
-                <button id="nav-tasks" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-[#00ff9f] border-b-2 border-[#00ff9f] transition-all duration-300 whitespace-nowrap">🎯 GÖREVLER</button>
-                <button id="nav-history" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">📜 GEÇMİŞ</button>
-                <button id="nav-calendar" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🗓️ TAKVİM</button>
-                <button id="nav-tree" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🌳 AĞAÇ</button>
-                <button id="nav-coach" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🧭 KOÇ</button>
+                <button id="nav-tasks" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-[#00ff9f] border-b-2 border-[#00ff9f] transition-all duration-300 whitespace-nowrap">🎯 Görevler</button>
+                <button id="nav-history" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">📜 Geçmiş</button>
+                <button id="nav-calendar" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🗓️ Takvim</button>
+                <button id="nav-tree" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🌌 Yetenek</button>
+                <button id="nav-coach" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🧭 Koç</button>
             </div>
 
             <div id="section-tasks" class="space-y-6">
                 
-                <div class="bg-[#07110e] border border-amber-500/30 rounded p-3 flex items-center justify-between">
+                <div id="energy-card" class="bg-[#07110e] border border-amber-500/30 rounded p-3 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span id="battery-icon" class="text-lg">⚡</span>
                         <div>
-                            <span class="text-xs font-bold text-white uppercase block">ENERJİ PROTOKOLÜ:</span>
+                            <span class="text-xs font-bold text-white uppercase block">Enerji modu</span>
                             <span id="battery-desc" class="text-[9px] text-gray-400">Normal Operasyon Modu Aktif</span>
                         </div>
                     </div>
@@ -399,7 +461,7 @@
                         <div class="flex items-center space-x-2">
                             <span class="text-xl">🪫</span>
                             <div>
-                                <h3 class="text-xs font-extrabold text-amber-300 uppercase tracking-widest">DÜŞÜK ENERJİ PROTOKOLÜ // SIFIR ÇEKME SUÇLULUĞU YOK</h3>
+                                <h3 class="text-xs font-extrabold text-amber-300 uppercase tracking-widest">Düşük enerji modu</h3>
                                 <p class="text-[9px] text-gray-300">Zihnin yorgun veya vardiya seni tüketmiş olabilir. Bu 3 mikro eylemi tamamla, serin korunsun!</p>
                             </div>
                         </div>
@@ -410,10 +472,10 @@
 
                 <div id="normal-tasks-container" class="space-y-6 transition-all duration-300">
                     
-                    <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 space-y-4">
+                    <div id="creator-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 space-y-4">
                         <div class="flex items-center space-x-2 border-b border-[#00ff9f]/10 pb-2 mb-2">
                             <span class="text-base">⚡</span>
-                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">GÖREV & RUTİN OLUŞTURUCU</h3>
+                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">Yeni görev / rutin</h3>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                             <div class="sm:col-span-12 space-y-1">
@@ -460,22 +522,22 @@
                         </div>
                     </div>
 
-                    <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5">
+                    <div id="routines-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5">
                         <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3 mb-4">
                             <div class="flex items-center space-x-2">
                                 <span class="text-base text-yellow-400">🔄</span>
-                                <h3 class="text-xs text-yellow-400 font-bold uppercase tracking-wider">GÜNLÜK RUTİNLERİM</h3>
+                                <h3 class="text-xs text-yellow-400 font-bold uppercase tracking-wider">Günlük rutinler</h3>
                             </div>
                             <span id="routine-counter" class="text-[9px] px-2 py-0.5 bg-yellow-950/40 border border-yellow-500/20 text-yellow-400 font-bold rounded">0 AKTİF</span>
                         </div>
                         <div id="routine-list" class="space-y-2"></div>
                     </div>
 
-                    <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5">
+                    <div id="tasks-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5">
                         <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3 mb-4">
                             <div class="flex items-center space-x-2">
                                 <span class="text-base text-[#00ff9f]">🎯</span>
-                                <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">TEK SEFERLİK GÖREVLER</h3>
+                                <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">Görevler</h3>
                             </div>
                             <span id="task-counter" class="text-[9px] px-2 py-0.5 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] font-bold rounded">0 AKTİF</span>
                         </div>
@@ -489,7 +551,7 @@
                     <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3">
                         <div>
                             <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider flex items-center space-x-2">
-                                <span>📜</span><span>KRONOLOJİK GÖREV & EYLEM GÜNLÜĞÜ</span>
+                                <span>📜</span><span>Geçmiş</span>
                             </h3>
                             <p class="text-[9px] text-gray-400 mt-0.5">Hangi gün saat kaçta ne başardığını gösteren siber kara kutu.</p>
                         </div>
@@ -561,7 +623,7 @@
                 <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-4">
                     <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3 mb-3">
                         <div>
-                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🌌 YETENEK HARİTASI</h3>
+                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🌌 Yetenek haritası</h3>
                             <span class="text-[10px] text-gray-400">Yaptığın her şey bir yeteneği büyütür</span>
                         </div>
                     </div>
@@ -574,7 +636,7 @@
                 <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-4 space-y-3">
                     <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3">
                         <div>
-                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🧭 AI KOÇ</h3>
+                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🧭 Koç</h3>
                             <span class="text-[10px] text-gray-400">İlgi alanlarını birleştirip sana fikir verir</span>
                         </div>
                         <button id="coach-clear" class="text-[10px] border border-gray-600 text-gray-400 px-2 py-1 rounded hover:text-white">TEMİZLE</button>
@@ -598,14 +660,32 @@
         </div>
     </main>
 
-    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#050a08]/95 backdrop-blur border-t border-[#00ff9f]/20 grid grid-cols-6" style="padding-bottom: env(safe-area-inset-bottom)">
-        <button data-bn="home" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🏠</span><span class="text-[10px] font-bold">Ana</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
-        <button data-bn="tasks" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🎯</span><span class="text-[10px] font-bold">Görev</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
-        <button data-bn="history" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">📜</span><span class="text-[10px] font-bold">Geçmiş</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
-        <button data-bn="calendar" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🗓️</span><span class="text-[10px] font-bold">Takvim</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
-        <button data-bn="tree" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🌳</span><span class="text-[10px] font-bold">Ağaç</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
-        <button data-bn="coach" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-lg leading-none">🧭</span><span class="text-[10px] font-bold">Koç</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d0f]/95 backdrop-blur border-t border-[#1a1f22] grid grid-cols-5" style="padding-bottom: env(safe-area-inset-bottom)">
+        <button data-bn="home" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🏠</span><span class="text-[10px] font-semibold">Bugün</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="calendar" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🗓️</span><span class="text-[10px] font-semibold">Takvim</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="tree" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🌌</span><span class="text-[10px] font-semibold">Yetenek</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="coach" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🧭</span><span class="text-[10px] font-semibold">Koç</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
+        <button data-bn="profile" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">👤</span><span class="text-[10px] font-semibold">Profil</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
     </nav>
+
+    <button id="fab-add" class="md:hidden fixed z-40 right-5 w-14 h-14 rounded-full bg-[#34d399] text-[#06261a] text-3xl font-bold flex items-center justify-center" style="bottom: calc(96px + env(safe-area-inset-bottom)); box-shadow: 0 8px 24px rgba(0,0,0,.5)" aria-label="Ekle">＋</button>
+
+    <div id="add-sheet" class="fixed inset-0 z-50 hidden">
+        <div id="add-sheet-bg" class="absolute inset-0 bg-black/60"></div>
+        <div class="absolute inset-x-0 bottom-0 bg-[#14181b] rounded-t-[24px] p-4 space-y-3 max-h-[85vh] overflow-y-auto" style="padding-bottom: calc(20px + env(safe-area-inset-bottom))">
+            <div class="mx-auto w-10 h-1.5 rounded-full bg-[#3b454b]"></div>
+            <div class="flex bg-[#0f1316] rounded-full p-1 text-sm font-bold">
+                <button data-sheet="task" class="sheet-tab flex-1 h-9 rounded-full">Görev / Rutin</button>
+                <button data-sheet="income" class="sheet-tab flex-1 h-9 rounded-full">Gelir</button>
+            </div>
+            <div id="sheet-task"></div>
+            <div id="sheet-income" class="hidden space-y-2">
+                <input id="sheet-income-source" type="text" placeholder="Kaynak (örn. Etsy, Dolap)" class="w-full bg-[#0f1316] border border-[#22292d] text-white rounded-xl p-3">
+                <input id="sheet-income-amount" type="number" inputmode="decimal" placeholder="Tutar (₺)" class="w-full bg-[#0f1316] border border-[#22292d] text-white rounded-xl p-3">
+                <button id="sheet-income-add" class="w-full h-12 rounded-xl bg-[#34d399] text-[#06261a] font-bold">Gelir ekle</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modals -->
     <div id="checkin-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -1262,21 +1342,21 @@
             const pos = {};
             const roots = nodesArr().filter(n => !n.parent);
             const vis = Object.fromEntries(roots.map(r => [r.id, visibleLeaves(r.id)]));
-            const weights = roots.map(r => Math.max(1.6, vis[r.id].length));
-            const total = weights.reduce((a, b) => a + b, 0) || 1;
-            let a = -180 * weights[0] / total; // ilk alan tam üstte ortalansın
+            // Simetrik düzen: her ana alan eşit bir dilim alır (ilk alan tam üstte),
+            // yetenekler kendi alanının açısı etrafında eşit aralıklarla ortalanır.
+            const span = 360 / Math.max(1, roots.length);
             roots.forEach((r, i) => {
-                const span = 360 * weights[i] / total, mid = a + span / 2;
+                const mid = i * span;
                 pos[r.id] = { ...polar(HUB_R, mid), a: mid, r: HUB_R, depth: 1, parent: null, root: r.id };
                 const leaves = vis[r.id];
-                const step = span / Math.max(1, leaves.length);
-                const crowded = step < 15;
+                const n = leaves.length;
+                const step = Math.min(span * 0.9 / Math.max(1, n), 20);
+                const crowded = step < 13;
                 leaves.forEach((id, j) => {
-                    const la = a + step * (j + 0.5);
+                    const la = mid + (j - (n - 1) / 2) * step;
                     const lr = crowded && j % 2 ? LEAF_R2 : LEAF_R;
                     pos[id] = { ...polar(lr, la), a: la, r: lr, depth: 2, parent: r.id, root: r.id };
                 });
-                a += span;
             });
             return pos;
         }
@@ -1820,7 +1900,7 @@
                 const MAX_SHIELDS = 3;
                 if (localState.streak.current % 7 === 0 && (localState.streak.shields || 0) < MAX_SHIELDS) {
                     localState.streak.shields = (localState.streak.shields || 0) + 1;
-                    triggerAlert(`🛡️ ${localState.streak.current} GÜNLÜK SERİ! +1 kalkan kazandın (${localState.streak.shields}/${MAX_SHIELDS}). Bir gün kaçırırsan serini korur.`);
+                    triggerAlert(`🛡️ ${localState.streak.current} Günlük seri! +1 kalkan kazandın (${localState.streak.shields}/${MAX_SHIELDS}). Bir gün kaçırırsan serini korur.`);
                     playSynthSound('success');
                 } else {
                     const toNext = 7 - (localState.streak.current % 7);
@@ -3272,23 +3352,68 @@ Kurallar:
         renderCoach();
         // ================== /AI KOÇ ==================
 
-        // ---- TELEFON ALT MENÜSÜ ----
+        // ---- TELEFON ALT MENÜSÜ (Bugün / Takvim / Yetenek / Koç / Profil) ----
         function updateBottomNav() {
+            const t = document.body.dataset.tab;
+            const cur = t === 'tasks' ? 'home' : t === 'history' ? 'profile' : t;
             document.querySelectorAll('#bottom-nav [data-bn]').forEach(b => {
-                const on = b.dataset.bn === document.body.dataset.tab;
+                const on = b.dataset.bn === cur;
                 b.classList.toggle('text-[#00ff9f]', on);
                 b.classList.toggle('text-gray-500', !on);
                 b.querySelector('.bn-dot')?.classList.toggle('opacity-0', !on);
             });
         }
-        document.querySelectorAll('#bottom-nav [data-bn]').forEach(b => b.onclick = () => {
-            const t = b.dataset.bn;
-            if (t === 'home') { document.body.dataset.tab = 'home'; playSynthSound('click'); updateBottomNav(); }
+        function goMobileTab(t) {
+            if (t === 'home') { document.getElementById('nav-tasks')?.click(); document.body.dataset.tab = 'home'; }
+            else if (t === 'profile') { document.getElementById('nav-history')?.click(); document.body.dataset.tab = 'profile'; }
             else document.getElementById(`nav-${t}`)?.click();
+            updateBottomNav();
             window.scrollTo({ top: 0 });
-        });
+        }
+        document.querySelectorAll('#bottom-nav [data-bn]').forEach(b => b.onclick = () => goMobileTab(b.dataset.bn));
         if (window.innerWidth < 768) document.body.dataset.tab = 'home';
         updateBottomNav();
+
+        // Selamlama (telefon başlığı)
+        function renderGreeting() {
+            const now = new Date(), h = now.getHours();
+            const g = h < 5 ? 'İyi geceler' : h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
+            const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+            const d = document.getElementById('m-greet-date'), t = document.getElementById('m-greet-text');
+            if (d) d.innerText = `${days[now.getDay()]}, ${now.getDate()} ${monthNames[now.getMonth()].charAt(0) + monthNames[now.getMonth()].slice(1).toLocaleLowerCase('tr-TR')}`;
+            if (t) t.innerText = `${g}, ${localState.customName || 'Alp'}`;
+            const al = document.getElementById('ps-auth-label'); if (al) al.innerText = currentUser ? `Çıkış yap (${currentUser.email})` : 'Google ile giriş yap';
+        }
+        renderGreeting(); setInterval(renderGreeting, 60000);
+
+        // ＋ Ekle sayfası: telefonda görev oluşturucu ve gelir ekleme
+        const creatorCard = document.getElementById('creator-card');
+        const creatorHome = creatorCard?.parentElement, creatorNext = creatorCard?.nextElementSibling;
+        function setSheetTab(k) {
+            document.querySelectorAll('.sheet-tab').forEach(b => { const on = b.dataset.sheet === k; b.style.background = on ? '#34d399' : 'transparent'; b.style.color = on ? '#06261a' : '#8a9299'; });
+            document.getElementById('sheet-task').classList.toggle('hidden', k !== 'task');
+            document.getElementById('sheet-income').classList.toggle('hidden', k !== 'income');
+        }
+        function openAddSheet() {
+            document.getElementById('sheet-task').appendChild(creatorCard);
+            setSheetTab('task');
+            document.getElementById('add-sheet').classList.remove('hidden');
+            playSynthSound('click');
+        }
+        function closeAddSheet() {
+            document.getElementById('add-sheet').classList.add('hidden');
+            if (creatorHome) creatorHome.insertBefore(creatorCard, creatorNext);
+        }
+        document.getElementById('fab-add').onclick = openAddSheet;
+        document.getElementById('add-sheet-bg').onclick = closeAddSheet;
+        document.querySelectorAll('.sheet-tab').forEach(b => b.onclick = () => setSheetTab(b.dataset.sheet));
+        document.getElementById('manual-add-btn')?.addEventListener('click', () => { if (!document.getElementById('add-sheet').classList.contains('hidden')) setTimeout(() => { if (!document.getElementById('manual-text').value) closeAddSheet(); }, 150); });
+        document.getElementById('sheet-income-add').onclick = () => {
+            document.getElementById('quick-income-source').value = document.getElementById('sheet-income-source').value;
+            document.getElementById('quick-income-amount').value = document.getElementById('sheet-income-amount').value;
+            document.getElementById('quick-income-add-btn').click();
+            setTimeout(() => { if (!document.getElementById('quick-income-amount').value) { document.getElementById('sheet-income-source').value = ''; document.getElementById('sheet-income-amount').value = ''; closeAddSheet(); } }, 150);
+        };
 
         // ================== AYLIK KARNE ==================
         let mrMonth = null;
