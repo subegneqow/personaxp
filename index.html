@@ -338,6 +338,7 @@
                 <button id="nav-history" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">📜 GEÇMİŞ</button>
                 <button id="nav-calendar" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🗓️ TAKVİM</button>
                 <button id="nav-tree" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🌳 AĞAÇ</button>
+                <button id="nav-coach" class="flex-1 py-3 px-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all duration-300 whitespace-nowrap">🧭 KOÇ</button>
             </div>
 
             <div id="section-tasks" class="space-y-6">
@@ -530,6 +531,31 @@
                 </div>
             </div>
 
+            <div id="section-coach" class="hidden space-y-4">
+                <div class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-4 space-y-3">
+                    <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3">
+                        <div>
+                            <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🧭 AI KOÇ</h3>
+                            <span class="text-[10px] text-gray-400">İlgi alanlarını birleştirip sana fikir verir</span>
+                        </div>
+                        <button id="coach-clear" class="text-[10px] border border-gray-600 text-gray-400 px-2 py-1 rounded hover:text-white">TEMİZLE</button>
+                    </div>
+                    <div id="coach-messages" class="space-y-2 overflow-y-auto pr-1" style="height:min(55vh,460px)"></div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="window.coachQuick('combo')" class="text-[10px] border border-[#00ff9f]/30 text-[#00ff9f] px-2 py-1 rounded hover:bg-[#00ff9f]/10">🔗 İlgi alanlarımı birleştir</button>
+                        <button onclick="window.coachQuick('today')" class="text-[10px] border border-[#00ff9f]/30 text-[#00ff9f] px-2 py-1 rounded hover:bg-[#00ff9f]/10">🎯 Bugün ne yapayım?</button>
+                        <button onclick="window.coachQuick('income')" class="text-[10px] border border-emerald-500/30 text-emerald-300 px-2 py-1 rounded hover:bg-emerald-500/10">💰 Gelir fikri</button>
+                        <button onclick="window.coachQuick('locked')" class="text-[10px] border border-amber-500/30 text-amber-300 px-2 py-1 rounded hover:bg-amber-500/10">🌱 Neye başlayayım?</button>
+                        <button onclick="window.coachQuick('week')" class="text-[10px] border border-cyan-500/30 text-cyan-300 px-2 py-1 rounded hover:bg-cyan-500/10">📊 Haftamı değerlendir</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="coach-input" type="text" placeholder="Koçuna bir şey sor..." class="flex-1 bg-[#050a08] border border-[#00ff9f]/30 text-white rounded px-3 py-2 text-xs focus:outline-none focus:border-[#00ff9f]">
+                        <button id="coach-send" class="px-4 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">GÖNDER</button>
+                    </div>
+                    <div class="text-[9px] text-gray-600">Gemini ile çalışır. Yetenek adların, son eylemlerin ve gelir kaynaklarının özeti gönderilir; çok özel bilgi yazma.</div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -668,9 +694,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCUiv_m8qujg-ncp1Xob_YnjE-aFkWHQVE",
@@ -2784,7 +2810,7 @@
             formatPomoDisplay();
         };
 
-        const tabs = ['tasks', 'history', 'calendar', 'tree'];
+        const tabs = ['tasks', 'history', 'calendar', 'tree', 'coach'];
         tabs.forEach(t => {
             const btn = document.getElementById(`nav-${t}`);
             if (!btn) return;
@@ -2800,6 +2826,172 @@
                 btn.classList.add('border-b-2', 'border-[#00ff9f]');
             };
         });
+
+        // ================== AI KOÇ (Gemini, Firebase AI Logic) ==================
+        // reCAPTCHA v3 site anahtarı (App Check). Herkese açık olması normaldir; gizli anahtar Firebase konsolunda durur.
+        const RECAPTCHA_SITE_KEY = "";
+        const COACH_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
+        const COACH_CHAT_KEY = "personaxp_coach_chat_v1";
+        let coachAI = null, coachChat = null, coachModelIdx = 0, coachBusy = false;
+        let coachMessages = (() => { try { return JSON.parse(localStorage.getItem(COACH_CHAT_KEY) || "[]"); } catch (e) { return []; } })();
+
+        function saveCoachMessages() {
+            try { localStorage.setItem(COACH_CHAT_KEY, JSON.stringify(coachMessages.slice(-30))); } catch (e) {}
+        }
+
+        function buildCoachContext() {
+            const lines = [];
+            const lvl = calculateLevelDetails(localState.xp || 0);
+            lines.push(`Kullanıcı: ${localState.customName || 'Alp'}, genel seviye ${lvl.level}, toplam ${localState.xp || 0} XP, seri ${localState.streak?.current || 0} gün.`);
+            if (tree()) {
+                const roots = nodesArr().filter(n => !n.parent);
+                for (const r of roots) {
+                    const leaves = leafIds().filter(id => rootOf(id) === r.id).map(id => tree().nodes[id]);
+                    const parts = leaves.map(n => { const x = totalXp(n.id); return x > 0 ? `${n.name} (Lv${skillLevel(x).lvl})` : n.name; });
+                    lines.push(`${r.name} dalı [Lv${skillLevel(totalXp(r.id)).lvl}]: ${parts.join(', ')}`);
+                }
+                const links = nodesArr().flatMap(n => (n.links || []).map(l => `${n.name}→${tree().nodes[l.to]?.name}`)).filter(s => !s.endsWith('undefined'));
+                if (links.length) lines.push(`Yetenekler arası bağlantılar: ${links.join(', ')}`);
+            }
+            const since = new Date(); since.setDate(since.getDate() - 14);
+            const sinceStr = toLocalDateStr(since);
+            const recent = (localState.actionLogs || []).filter(l => l.dateStr >= sinceStr);
+            const counts = {};
+            recent.forEach(l => { const k = l.skillId && tree()?.nodes[l.skillId] ? tree().nodes[l.skillId].name : (l.text || '').replace(/^\[[^\]]+\]\s*/, '').slice(0, 40); counts[k] = (counts[k] || 0) + 1; });
+            const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => `${k} x${v}`);
+            lines.push(`Son 14 günde yaptıkları: ${top.join(', ') || 'kayıt yok'}`);
+            lines.push(`Rutinleri: ${(localState.routines || []).map(r => r.text).join(', ') || 'yok'}`);
+            lines.push(`Açık görevleri: ${(localState.directives || []).map(d => d.text).slice(0, 10).join(', ') || 'yok'}`);
+            const dl = (localState.deadlines || []).map(d => `${d.title} (${d.date})`).slice(0, 5);
+            if (dl.length) lines.push(`Kritik hedefler: ${dl.join(', ')}`);
+            const nowKey = getMonthKey();
+            const srcs = {};
+            (localState.incomeEntries || []).forEach(e => { srcs[e.source] = (srcs[e.source] || 0) + (e.amount || 0); });
+            lines.push(`Bu ay gelir: ${getMonthIncome(nowKey)} ₺ / hedef ${localState.monthlyTarget || 10000} ₺. Gelir kaynakları (tüm zaman): ${Object.entries(srcs).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k} ${v}₺`).join(', ') || 'yok'}`);
+            lines.push(`Bugünün tarihi: ${getTodayStr()}`);
+            return lines.join('\n');
+        }
+
+        const COACH_SYSTEM = `Sen PersonaXP içindeki kişisel gelişim koçusun. Kullanıcı hayatını RPG gibi takip ediyor (XP, seviye, yetenek ağacı).
+Görevin: kullanıcının ilgi alanlarını ve yeteneklerini BİRBİRİYLE BAĞDAŞTIRAN, somut ve uygulanabilir fikirler vermek.
+Kurallar:
+- Her zaman Türkçe yaz. Samimi ama abartısız ol, "sen" diye hitap et.
+- KISA yaz: kullanıcı ekranda çok yazı görünce bunalıyor. En fazla 3 madde veya 5-6 kısa cümle.
+- Adım adım ilerle: büyük planlar yerine "şimdi yapılacak tek adım"ı öne çıkar.
+- Fikirlerde en az iki yeteneği birleştir (örn. Cavalry + Axl8 → motorsport animasyonu sat). Hangi yetenekleri birleştirdiğini belirt.
+- Kilitli (seviyesiz) yeteneklere küçük başlangıç adımı öner; güçlü yetenekleri gelire bağlamaya çalış.
+- Sağlık konusunda tıbbi tavsiye verme; finans konusunda kesin yatırım tavsiyesi verme.
+- Sana verilen veride olmayan şeyleri uydurma.
+- Biçim: düz metin, gerekirse "- " ile madde ve **kalın** vurgu. Başlık kullanma.`;
+
+        async function initCoach() {
+            if (coachAI) return coachAI;
+            const aiMod = await import("https://www.gstatic.com/firebasejs/12.5.0/firebase-ai.js");
+            if (RECAPTCHA_SITE_KEY) {
+                try {
+                    const ac = await import("https://www.gstatic.com/firebasejs/12.5.0/firebase-app-check.js");
+                    ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true });
+                } catch (e) { console.warn("App Check başlatılamadı", e); }
+            }
+            coachAI = { mod: aiMod, ai: aiMod.getAI(app, { backend: new aiMod.GoogleAIBackend() }) };
+            return coachAI;
+        }
+
+        function startCoachChat() {
+            const { mod, ai } = coachAI;
+            const model = mod.getGenerativeModel(ai, {
+                model: COACH_MODELS[coachModelIdx],
+                systemInstruction: COACH_SYSTEM + "\n\nKULLANICI VERİSİ (güncel):\n" + buildCoachContext()
+            });
+            const history = coachMessages.slice(-12).filter(m => m.text && !m.error).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+            while (history.length && history[0].role !== 'user') history.shift();
+            coachChat = model.startChat({ history });
+        }
+
+        function coachFormat(t) {
+            return esc(t)
+                .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/^\s*[-*•]\s+(.*)$/gm, '<div class="pl-3 -indent-3">• $1</div>')
+                .replace(/\n/g, '<br>')
+                .replace(/<\/div><br>/g, '</div>');
+        }
+
+        function renderCoach() {
+            const box = document.getElementById('coach-messages');
+            if (!box) return;
+            if (!coachMessages.length) {
+                box.innerHTML = `<div class="text-[11px] text-gray-500 font-mono leading-relaxed">Selam! Ben senin koçunum 🧭 Yetenek ağacına, son yaptıklarına ve gelir kaynaklarına bakıp ilgi alanlarını birleştiren fikirler veririm. Aşağıdan bir şey seç ya da bana yaz.</div>`;
+            } else {
+                box.innerHTML = coachMessages.map(m => m.role === 'user'
+                    ? `<div class="flex justify-end"><div class="max-w-[85%] bg-[#00ff9f]/10 border border-[#00ff9f]/30 text-[#c8ffe9] rounded px-3 py-2 text-xs">${esc(m.text)}</div></div>`
+                    : `<div class="flex justify-start"><div class="max-w-[90%] ${m.error ? 'bg-red-950/30 border-red-500/40 text-red-200' : 'bg-[#0a1814] border-[#00ff9f]/15 text-gray-200'} border rounded px-3 py-2 text-xs leading-relaxed">${m.text ? coachFormat(m.text) : '<span class="animate-pulse text-[#00ff9f]">düşünüyor…</span>'}</div></div>`
+                ).join('');
+            }
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function coachErrorText(e) {
+            const msg = String(e?.message || e);
+            if (/app.?check|appcheck|attestation|recaptcha/i.test(msg)) return "Güvenlik doğrulaması (App Check) eksik. Kurulumun son adımını birlikte yapacağız; Claude'a bu mesajı göster.";
+            if (/429|quota|resource.?exhausted|rate/i.test(msg)) return "Ücretsiz kullanım sınırı doldu. Biraz bekleyip tekrar dene (günlük sınır gece sıfırlanır).";
+            if (/403|permission|api.*not.*enabled|has not been used/i.test(msg)) return "Firebase'de AI Logic izni yok gibi görünüyor. Hata: " + msg.slice(0, 160);
+            if (/failed to fetch|network/i.test(msg)) return "İnternet bağlantısı yok ya da sunucuya ulaşılamadı.";
+            return "Bir hata oldu: " + msg.slice(0, 200);
+        }
+
+        async function askCoach(text) {
+            text = (text || '').trim();
+            if (!text || coachBusy) return;
+            coachBusy = true;
+            coachMessages.push({ role: 'user', text });
+            const reply = { role: 'model', text: '' };
+            coachMessages.push(reply);
+            renderCoach();
+            try {
+                await initCoach();
+                let lastErr = null;
+                for (let attempt = 0; attempt < COACH_MODELS.length; attempt++) {
+                    try {
+                        startCoachChat();
+                        const res = await coachChat.sendMessageStream(text);
+                        for await (const chunk of res.stream) {
+                            reply.text += chunk.text();
+                            renderCoach();
+                        }
+                        lastErr = null;
+                        break;
+                    } catch (e) {
+                        lastErr = e;
+                        // model bulunamadıysa sıradaki modeli dene
+                        if (/404|not.?found|not supported|is not available/i.test(String(e?.message || e)) && coachModelIdx < COACH_MODELS.length - 1) { coachModelIdx++; reply.text = ''; continue; }
+                        break;
+                    }
+                }
+                if (lastErr) throw lastErr;
+                if (!reply.text.trim()) reply.text = "Şu an cevap üretemedim, tekrar dener misin?";
+            } catch (e) {
+                console.warn("Koç hatası", e);
+                reply.text = coachErrorText(e);
+                reply.error = true;
+            }
+            coachBusy = false;
+            saveCoachMessages();
+            renderCoach();
+        }
+
+        const COACH_PROMPTS = {
+            combo: "İlgi alanlarımı ve yeteneklerimi birbirine bağlayan 3 yaratıcı fikir ver.",
+            today: "Son yaptıklarıma bakarak bugün yapmam gereken tek şey ne olmalı?",
+            income: "Yeteneklerimi kullanarak gelir hedefime yaklaşmam için 2 somut fikir ver.",
+            locked: "Hiç başlamadığım (kilitli) yeteneklerden hangisine başlamalıyım ve ilk küçük adım ne?",
+            week: "Son iki haftamı kısaca değerlendir: neyi iyi yaptım, neyi ihmal ettim?"
+        };
+        window.coachQuick = (k) => askCoach(COACH_PROMPTS[k]);
+        document.getElementById('coach-send').onclick = () => { const i = document.getElementById('coach-input'); const v = i.value; i.value = ''; askCoach(v); };
+        document.getElementById('coach-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('coach-send').click(); } });
+        document.getElementById('coach-clear').onclick = () => { if (!confirm("Sohbet temizlensin mi?")) return; coachMessages = []; saveCoachMessages(); renderCoach(); };
+        renderCoach();
+        // ================== /AI KOÇ ==================
 
         // ---- VERİ KASASI ----
         const vaultModal = document.getElementById('vault-modal');
