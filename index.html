@@ -130,6 +130,10 @@
                 <span>📊</span>
                 <span class="hidden sm:inline">KARNE</span>
             </button>
+            <button id="reminder-btn" class="text-xs border border-amber-400/40 px-3 py-1.5 hover:bg-amber-500/20 text-amber-300 rounded font-bold transition-all flex items-center space-x-1" title="Hatırlatmalar">
+                <span>🔔</span>
+                <span class="hidden sm:inline">HATIRLAT</span>
+            </button>
             <button id="backup-btn" class="text-xs border border-[#00ff9f]/30 px-3 py-1.5 hover:bg-[#00ff9f]/20 text-[#00ff9f] rounded font-bold transition-all flex items-center space-x-1" title="Veri Kasası: Yedek indir / geri yükle">
                 <span>💾</span>
                 <span class="hidden sm:inline">KASA</span>
@@ -735,6 +739,30 @@
             </div>
             <div id="mr-body" class="space-y-4"></div>
             <button id="mr-coach" class="w-full py-2.5 border border-[#00ff9f]/40 text-[#00ff9f] text-xs font-bold rounded hover:bg-[#00ff9f]/10">🧭 KOÇA BU AYI YORUMLAT</button>
+        </div>
+    </div>
+
+    <div id="reminder-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#07110e] border-2 border-amber-400/50 rounded-lg max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-amber-400/30 pb-3">
+                <div>
+                    <h3 class="text-sm font-extrabold text-amber-300 uppercase tracking-widest">🔔 HATIRLATMALAR</h3>
+                    <span class="text-[11px] text-gray-400">Sadece yapmadığın rutinler için bildirim gelir</span>
+                </div>
+                <button id="rem-close" class="text-gray-400 hover:text-white text-lg" aria-label="Kapat">✕</button>
+            </div>
+            <div id="rem-status" class="text-xs font-mono"></div>
+            <div class="space-y-2">
+                <div class="text-[11px] text-gray-400 font-bold uppercase">Bildirim saatleri</div>
+                <div id="rem-times" class="space-y-1.5"></div>
+                <button id="rem-add-time" class="text-[11px] text-amber-300 border border-amber-500/30 rounded px-2 py-1">＋ saat ekle</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="rem-enable" class="py-2.5 bg-amber-400 text-black font-bold text-xs rounded hover:bg-white">🔔 BİLDİRİMLERİ AÇ</button>
+                <button id="rem-disable" class="py-2.5 border border-gray-600 text-gray-300 font-bold text-xs rounded">KAPAT</button>
+            </div>
+            <button id="rem-test" class="w-full py-2 border border-amber-500/30 text-amber-200 text-xs rounded">🧪 Bu cihaza deneme bildirimi gönder</button>
+            <div class="text-[10px] text-gray-500 leading-relaxed">iPhone'da bildirimler sadece Ana Ekrana eklenen <b>XP</b> uygulamasında çalışır. Bildirimler birkaç dakika gecikmeli gelebilir.</div>
         </div>
     </div>
 
@@ -3389,6 +3417,92 @@ Kurallar:
             if (window.innerWidth < 768) { document.body.dataset.tab = 'coach'; updateBottomNav(); }
             askCoach(mrLastSummary + " Bu ayımı kısaca yorumla: neyi iyi yaptım, gelecek ay neye odaklanmalıyım?");
         };
+
+        // ================== HATIRLATMALAR (Web Push / FCM) ==================
+        const VAPID_KEY = "BCSiy-5l6PVZgwU9Ni8RauvGKI5sqrkHnWSrZ_QzlsU4gOSrX6Z358BgtXKzA8Q8RP2js4G95IzvvOw5szVXaQ4";
+        let remTimesDraft = null;
+        function remState() {
+            if (!localState.reminders) localState.reminders = { enabled: false, times: ["21:00"], tz: "Europe/Istanbul", tokens: [] };
+            return localState.reminders;
+        }
+        const pushSupported = () => 'serviceWorker' in navigator && 'Notification' in window && 'PushManager' in window;
+        function renderReminders() {
+            const r = remState();
+            if (!remTimesDraft) remTimesDraft = [...(r.times || ["21:00"])];
+            document.getElementById('rem-times').innerHTML = remTimesDraft.map((t, i) => `
+                <div class="flex items-center gap-2">
+                    <input type="time" value="${esc(t)}" data-i="${i}" class="rem-time flex-1 bg-[#050a08] border border-amber-500/30 text-white rounded p-2 text-sm">
+                    ${remTimesDraft.length > 1 ? `<button data-del="${i}" class="rem-del text-gray-500 hover:text-red-400 px-2">✕</button>` : ''}
+                </div>`).join('');
+            document.querySelectorAll('.rem-time').forEach(inp => inp.onchange = () => { remTimesDraft[+inp.dataset.i] = inp.value; });
+            document.querySelectorAll('.rem-del').forEach(b => b.onclick = () => { remTimesDraft.splice(+b.dataset.del, 1); renderReminders(); });
+            const perm = 'Notification' in window ? Notification.permission : 'yok';
+            const st = document.getElementById('rem-status');
+            if (!pushSupported()) st.innerHTML = `<span class="text-red-400">Bu tarayıcı bildirim desteklemiyor.${isIOS && !isStandalone ? ' Ana ekrandaki XP uygulamasından aç.' : ''}</span>`;
+            else if (r.enabled && perm === 'granted') st.innerHTML = `<span class="text-[#00ff9f]">✔ Açık · ${r.times.join(', ')} · ${r.tokens.length} cihaz</span>`;
+            else if (perm === 'denied') st.innerHTML = `<span class="text-red-400">Bildirim izni reddedilmiş. iPhone Ayarlar → Bildirimler → PersonaXP'den aç.</span>`;
+            else st.innerHTML = `<span class="text-gray-400">Kapalı</span>`;
+        }
+        async function getPushRegistration() {
+            const reg = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './' });
+            await navigator.serviceWorker.ready;
+            return reg;
+        }
+        async function getFcmToken(reg) {
+            const m = await import("https://www.gstatic.com/firebasejs/12.5.0/firebase-messaging.js");
+            const messaging = m.getMessaging(app);
+            m.onMessage(messaging, (p) => { const d = p.data || {}; triggerAlert(`${d.title || '🔔'} — ${d.body || ''}`); });
+            return m.getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+        }
+        document.getElementById('rem-enable').onclick = async () => {
+            const btn = document.getElementById('rem-enable');
+            try {
+                if (isIOS && !isStandalone) { triggerAlert("iPhone'da bildirimler için siteyi Ana Ekrandaki XP uygulamasından açman gerekiyor.", 'error'); return; }
+                if (!pushSupported()) { triggerAlert("Bu tarayıcı bildirimleri desteklemiyor.", 'error'); return; }
+                if (!currentUser) { triggerAlert("Önce Google ile giriş yap; hatırlatmalar bulut hesabına bağlı çalışıyor.", 'error'); return; }
+                btn.innerText = 'İZİN İSTENİYOR…';
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') { triggerAlert("Bildirim izni verilmedi.", 'error'); return; }
+                const reg = await getPushRegistration();
+                const token = await getFcmToken(reg);
+                const r = remState();
+                r.enabled = true;
+                r.times = [...new Set((remTimesDraft || r.times).filter(Boolean))].sort();
+                r.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Istanbul";
+                r.tokens = [...new Set([...(r.tokens || []).filter(t => t !== token), token])].slice(-5);
+                remTimesDraft = null;
+                await securePersistVault();
+                reg.showNotification("PersonaXP 🔔", { body: `Hatırlatmalar açık: ${r.times.join(', ')}`, icon: "icon-192.png" });
+                triggerAlert("🔔 Hatırlatmalar açıldı!");
+            } catch (e) {
+                console.warn(e);
+                triggerAlert("Bildirim açılamadı: " + (e.code || e.message), 'error');
+            } finally { btn.innerText = '🔔 BİLDİRİMLERİ AÇ'; renderReminders(); }
+        };
+        document.getElementById('rem-disable').onclick = async () => {
+            const r = remState(); r.enabled = false; remTimesDraft = null;
+            await securePersistVault(); renderReminders(); triggerAlert("Hatırlatmalar kapatıldı.");
+        };
+        document.getElementById('rem-add-time').onclick = () => { if (!remTimesDraft) remTimesDraft = [...remState().times]; if (remTimesDraft.length < 4) remTimesDraft.push("09:00"); renderReminders(); };
+        document.getElementById('rem-test').onclick = async () => {
+            try {
+                if (Notification.permission !== 'granted') { triggerAlert("Önce bildirimleri aç.", 'error'); return; }
+                const reg = await getPushRegistration();
+                const routines = (localState.routines || []).filter(r => r.lastCompletedDate !== getTodayStr());
+                reg.showNotification(routines.length ? `⏰ Bugün ${routines.length} rutinin kaldı` : "✔ Bugün her şey tamam", { body: routines.slice(0, 3).map(r => r.text).join(', ') || 'Harika gidiyorsun!', icon: "icon-192.png" });
+            } catch (e) { triggerAlert("Deneme bildirimi gösterilemedi: " + e.message, 'error'); }
+        };
+        document.getElementById('reminder-btn').onclick = () => { remTimesDraft = null; renderReminders(); document.getElementById('reminder-modal').classList.remove('hidden'); };
+        document.getElementById('rem-close').onclick = () => { if (remTimesDraft && remState().enabled) { remState().times = [...new Set(remTimesDraft.filter(Boolean))].sort(); securePersistVault(); } remTimesDraft = null; document.getElementById('reminder-modal').classList.add('hidden'); };
+        // Açılışta: izin varsa jetonu tazele (iOS jetonları zamanla değişebilir)
+        setTimeout(async () => {
+            try {
+                const r = localState.reminders;
+                if (!r?.enabled || !pushSupported() || Notification.permission !== 'granted' || !currentUser) return;
+                const token = await getFcmToken(await getPushRegistration());
+                if (token && !(r.tokens || []).includes(token)) { r.tokens = [...(r.tokens || []), token].slice(-5); await securePersistVault(); }
+            } catch (e) { console.warn("Token yenileme", e); }
+        }, 6000);
 
         // ---- VERİ KASASI ----
         const vaultModal = document.getElementById('vault-modal');
