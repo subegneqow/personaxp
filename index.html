@@ -148,6 +148,7 @@
                             <span class="text-base">💰</span>
                             <h3 class="text-xs text-emerald-400 font-bold uppercase tracking-wider">AYLIK GELİR PUSULASI <span id="income-month-label" class="text-emerald-300/70"></span></h3>
                             <button id="income-history-toggle" class="text-[9px] border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded hover:bg-emerald-500/20">📜 KAYITLAR</button>
+                            <button onclick="window.openMonthlyReport()" class="text-[9px] border border-purple-400/40 text-purple-300 px-1.5 py-0.5 rounded hover:bg-purple-500/20">📅 AYLIK KARNE</button>
                         </div>
                         <button id="edit-monthly-goal-btn" class="text-[10px] text-gray-400 hover:text-emerald-300 transition-colors flex items-center space-x-1 cursor-pointer" title="Aylık Hedefi Değiştir">
                             <span>Hedef:</span>
@@ -716,6 +717,24 @@
         </div>
     </div>
 
+    <div id="monthly-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 hidden overflow-y-auto">
+        <div class="bg-[#07110e] border-2 border-purple-400/50 rounded-lg max-w-xl w-full p-4 sm:p-6 space-y-4 my-4">
+            <div class="flex justify-between items-center border-b border-purple-400/30 pb-3">
+                <div class="flex items-center gap-2">
+                    <button id="mr-prev" class="w-8 h-8 text-purple-300 rounded-full hover:bg-purple-500/20" aria-label="Önceki ay">◀</button>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-purple-300 uppercase tracking-widest">📅 AYLIK KARNE</h3>
+                        <div id="mr-title" class="text-base font-bold text-white"></div>
+                    </div>
+                    <button id="mr-next" class="w-8 h-8 text-purple-300 rounded-full hover:bg-purple-500/20" aria-label="Sonraki ay">▶</button>
+                </div>
+                <button id="mr-close" class="text-gray-400 hover:text-white text-lg" aria-label="Kapat">✕</button>
+            </div>
+            <div id="mr-body" class="space-y-4"></div>
+            <button id="mr-coach" class="w-full py-2.5 border border-[#00ff9f]/40 text-[#00ff9f] text-xs font-bold rounded hover:bg-[#00ff9f]/10">🧭 KOÇA BU AYI YORUMLAT</button>
+        </div>
+    </div>
+
     <div id="skill-picker-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-[#07110e] border-2 border-[#00ff9f]/50 rounded-lg max-w-sm w-full p-5 space-y-3">
             <h3 id="skill-picker-title" class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-wider">YETENEK SEÇ</h3>
@@ -937,6 +956,7 @@
                 prev = pastKeys.pop() || "";
             }
             if (prev && prev !== nowKey) {
+                if (localState.lastSeenMonth) setTimeout(() => window.openMonthlyReport?.(prev), 1800); // ay bitti: karneyi göster
                 const prevTotal = getMonthIncome(prev);
                 const target = localState.monthlyTarget || 10000;
                 const hit = prevTotal >= target;
@@ -3261,6 +3281,111 @@ Kurallar:
         });
         if (window.innerWidth < 768) document.body.dataset.tab = 'home';
         updateBottomNav();
+
+        // ================== AYLIK KARNE ==================
+        let mrMonth = null;
+        function monthStats(key) {
+            const logs = (localState.actionLogs || []).filter(l => (l.dateStr || '').slice(0, 7) === key && !isNaN(l.xp));
+            const xp = logs.reduce((s, l) => s + (l.xp || 0), 0);
+            const byDay = {};
+            logs.forEach(l => { byDay[l.dateStr] = (byDay[l.dateStr] || 0) + (l.xp || 0); });
+            const [y, m] = key.split('-').map(Number);
+            const daysInMonth = new Date(y, m, 0).getDate();
+            let longest = 0, run = 0;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const ds = `${key}-${String(d).padStart(2, '0')}`;
+                if (byDay[ds]) { run++; longest = Math.max(longest, run); } else run = 0;
+            }
+            const best = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0];
+            const bySkill = {}, byCat = {}, byText = {};
+            logs.forEach(l => {
+                if (l.skillId && tree()?.nodes[l.skillId]) bySkill[l.skillId] = (bySkill[l.skillId] || 0) + (l.xp || 0);
+                if (l.cat) byCat[l.cat] = (byCat[l.cat] || 0) + (l.xp || 0);
+                const t = cleanLogTitle(l.text); if (!/^💰/.test(t)) byText[t] = (byText[t] || 0) + 1;
+            });
+            const income = getMonthIncome(key), target = localState.monthlyTarget || 10000;
+            return { key, logs, xp, byDay, daysInMonth, activeDays: Object.keys(byDay).length, longest, best, bySkill, byCat, byText, income, target };
+        }
+        function prevMonthKey(key) { const [y, m] = key.split('-').map(Number); return getMonthKey(new Date(y, m - 2, 1)); }
+        function nextMonthKey(key) { const [y, m] = key.split('-').map(Number); return getMonthKey(new Date(y, m, 1)); }
+        function firstDataMonth() {
+            const ks = [...(localState.actionLogs || []).map(l => (l.dateStr || '').slice(0, 7)), ...(localState.incomeEntries || []).map(e => (e.dateStr || '').slice(0, 7))].filter(Boolean).sort();
+            return ks[0] || getMonthKey();
+        }
+
+        function renderMonthlyReport() {
+            const S = monthStats(mrMonth), P = monthStats(prevMonthKey(mrMonth));
+            const isCurrent = mrMonth === getMonthKey();
+            document.getElementById('mr-title').innerHTML = esc(monthKeyLabel(mrMonth)) + (isCurrent ? ' <span class="text-[11px] text-gray-400 font-normal">· devam ediyor</span>' : '');
+            document.getElementById('mr-prev').disabled = mrMonth <= firstDataMonth();
+            document.getElementById('mr-next').disabled = isCurrent;
+            document.getElementById('mr-prev').style.opacity = mrMonth <= firstDataMonth() ? 0.3 : 1;
+            document.getElementById('mr-next').style.opacity = isCurrent ? 0.3 : 1;
+            const diff = P.xp ? Math.round((S.xp - P.xp) / P.xp * 100) : null;
+            const incPct = Math.min(100, Math.round(S.income / S.target * 100));
+            const tile = (label, val, sub = '') => `<div class="bg-[#0a1814] border border-purple-400/15 rounded p-3"><div class="text-[10px] text-gray-400 font-bold uppercase">${label}</div><div class="text-lg font-bold text-white font-mono">${val}</div>${sub ? `<div class="text-[10px] text-gray-500">${sub}</div>` : ''}</div>`;
+            const topSkills = Object.entries(S.bySkill).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            const maxSkill = topSkills[0]?.[1] || 1;
+            const topRoutine = Object.entries(S.byText).sort((a, b) => b[1] - a[1])[0];
+            const catTotal = Object.values(S.byCat).reduce((a, b) => a + b, 0) || 1;
+            // ısı haritası
+            const [y, m] = mrMonth.split('-').map(Number);
+            const startCol = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+            const maxDay = Math.max(1, ...Object.values(S.byDay));
+            let heat = '';
+            for (let i = 0; i < startCol; i++) heat += '<div></div>';
+            for (let d = 1; d <= S.daysInMonth; d++) {
+                const ds = `${mrMonth}-${String(d).padStart(2, '0')}`, v = S.byDay[ds] || 0;
+                const a = v ? 0.25 + 0.75 * v / maxDay : 0;
+                heat += `<div title="${d}: ${v} XP" class="aspect-square rounded-sm text-[9px] flex items-center justify-center ${v ? 'text-black font-bold' : 'text-gray-600'}" style="background:${v ? `rgba(168,85,247,${a.toFixed(2)})` : '#0a1210'}">${d}</div>`;
+            }
+            document.getElementById('mr-body').innerHTML = `
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    ${tile('Kazanılan XP', S.xp.toLocaleString('tr-TR'), diff === null ? '' : `${diff >= 0 ? '▲' : '▼'} geçen aya göre %${Math.abs(diff)}`)}
+                    ${tile('Aktif gün', `${S.activeDays}/${S.daysInMonth}`)}
+                    ${tile('En uzun seri', `${S.longest} gün`)}
+                    ${tile('Eylem', S.logs.length)}
+                </div>
+                <div class="bg-[#0a1814] border border-emerald-500/20 rounded p-3 space-y-1.5">
+                    <div class="flex justify-between text-xs"><span class="text-emerald-300 font-bold">💰 Gelir</span><span class="font-mono text-white">${S.income.toLocaleString('tr-TR')} / ${S.target.toLocaleString('tr-TR')} ₺ ${S.income >= S.target ? '🏆' : ''}</span></div>
+                    <div class="h-2 bg-[#050a08] rounded overflow-hidden"><div class="h-full bg-emerald-500" style="width:${incPct}%"></div></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-[#0a1814] border border-purple-400/15 rounded p-3 space-y-2">
+                        <div class="text-[10px] text-gray-400 font-bold uppercase">🌳 En çok büyüyen yetenekler</div>
+                        ${topSkills.length ? topSkills.map(([id, v], i) => { const n = tree().nodes[id]; return `<div><div class="flex justify-between text-xs"><span class="text-white">${['🥇', '🥈', '🥉'][i]} ${esc(n.icon)} ${esc(n.name)}</span><span class="font-mono text-purple-300">+${v} XP</span></div><div class="h-1.5 bg-[#050a08] rounded overflow-hidden mt-0.5"><div class="h-full bg-purple-400" style="width:${Math.round(v / maxSkill * 100)}%"></div></div></div>`; }).join('') : '<div class="text-xs text-gray-600">Bu ay yetenek kaydı yok</div>'}
+                    </div>
+                    <div class="bg-[#0a1814] border border-purple-400/15 rounded p-3 space-y-2">
+                        <div class="text-[10px] text-gray-400 font-bold uppercase">📊 Alan dağılımı</div>
+                        <div class="flex h-3 rounded overflow-hidden">${Object.entries(S.byCat).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<div title="${CAT_NAMES[c] || c}: ${v} XP" style="width:${v / catTotal * 100}%;background:${CAT_COLORS[c] || '#94a3b8'}"></div>`).join('')}</div>
+                        <div class="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-gray-400">${Object.entries(S.byCat).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<span><span style="color:${CAT_COLORS[c] || '#94a3b8'}">■</span> ${CAT_NAMES[c] || c} %${Math.round(v / catTotal * 100)}</span>`).join('')}</div>
+                        ${topRoutine ? `<div class="text-[11px] text-gray-300 pt-1">🔁 En sadık alışkanlık: <b class="text-white">${esc(topRoutine[0])}</b> (${topRoutine[1]}×)</div>` : ''}
+                        ${S.best ? `<div class="text-[11px] text-gray-300">⭐ En iyi gün: <b class="text-white">${S.best[0].split('-').reverse().slice(0, 2).join('.')}</b> (+${S.best[1]} XP)</div>` : ''}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase mb-1.5">🔥 Ay boyunca aktiflik</div>
+                    <div class="max-w-[260px]"><div class="grid grid-cols-7 gap-1 text-center text-[9px] text-gray-500 mb-1"><div>Pzt</div><div>Sal</div><div>Çar</div><div>Per</div><div>Cum</div><div>Cmt</div><div>Paz</div></div>
+                    <div class="grid grid-cols-7 gap-1">${heat}</div></div>
+                </div>`;
+            mrLastSummary = `${monthKeyLabel(mrMonth)} karnem: ${S.xp} XP (${diff === null ? 'ilk ay' : (diff >= 0 ? '+' : '') + diff + '% geçen aya göre'}), ${S.activeDays}/${S.daysInMonth} aktif gün, en uzun seri ${S.longest} gün, gelir ${S.income}/${S.target} ₺, en çok büyüyen: ${topSkills.map(([id, v]) => tree().nodes[id].name + ' +' + v).join(', ') || 'yok'}, en sadık alışkanlık: ${topRoutine ? topRoutine[0] : 'yok'}.`;
+        }
+        let mrLastSummary = '';
+        window.openMonthlyReport = (key) => {
+            mrMonth = key || getMonthKey();
+            renderMonthlyReport();
+            document.getElementById('monthly-modal').classList.remove('hidden');
+            playSynthSound('click');
+        };
+        document.getElementById('mr-close').onclick = () => document.getElementById('monthly-modal').classList.add('hidden');
+        document.getElementById('mr-prev').onclick = () => { if (mrMonth > firstDataMonth()) { mrMonth = prevMonthKey(mrMonth); renderMonthlyReport(); } };
+        document.getElementById('mr-next').onclick = () => { if (mrMonth < getMonthKey()) { mrMonth = nextMonthKey(mrMonth); renderMonthlyReport(); } };
+        document.getElementById('mr-coach').onclick = () => {
+            document.getElementById('monthly-modal').classList.add('hidden');
+            const t = document.getElementById('nav-coach'); t?.click();
+            if (window.innerWidth < 768) { document.body.dataset.tab = 'coach'; updateBottomNav(); }
+            askCoach(mrLastSummary + " Bu ayımı kısaca yorumla: neyi iyi yaptım, gelecek ay neye odaklanmalıyım?");
+        };
 
         // ---- VERİ KASASI ----
         const vaultModal = document.getElementById('vault-modal');
