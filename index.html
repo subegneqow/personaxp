@@ -660,7 +660,7 @@
         </div>
     </main>
 
-    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d0f]/95 backdrop-blur border-t border-[#1a1f22] grid grid-cols-5" style="padding-bottom: env(safe-area-inset-bottom)">
+    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d0f]/95 backdrop-blur border-t border-[#1a1f22] grid grid-cols-5" style="padding-bottom: max(4px, calc(env(safe-area-inset-bottom) - 16px))">
         <button data-bn="home" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🏠</span><span class="text-[10px] font-semibold">Bugün</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
         <button data-bn="calendar" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🗓️</span><span class="text-[10px] font-semibold">Takvim</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
         <button data-bn="tree" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🌌</span><span class="text-[10px] font-semibold">Yetenek</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
@@ -668,7 +668,7 @@
         <button data-bn="profile" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">👤</span><span class="text-[10px] font-semibold">Profil</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
     </nav>
 
-    <button id="fab-add" class="md:hidden fixed z-40 right-5 w-14 h-14 rounded-full bg-[#34d399] text-[#06261a] text-3xl font-bold flex items-center justify-center" style="bottom: calc(96px + env(safe-area-inset-bottom)); box-shadow: 0 8px 24px rgba(0,0,0,.5)" aria-label="Ekle">＋</button>
+    <button id="fab-add" class="md:hidden fixed z-40 right-5 w-14 h-14 rounded-full bg-[#34d399] text-[#06261a] text-3xl font-bold flex items-center justify-center" style="bottom: calc(80px + max(4px, env(safe-area-inset-bottom) - 16px)); box-shadow: 0 8px 24px rgba(0,0,0,.5)" aria-label="Ekle">＋</button>
 
     <div id="add-sheet" class="fixed inset-0 z-50 hidden">
         <div id="add-sheet-bg" class="absolute inset-0 bg-black/60"></div>
