@@ -2,7 +2,12 @@
 <html class="dark" lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PersonaXP">
+    <meta name="theme-color" content="#050a08">
     <title>PERSONAXP // TELEMETRY TERMINAL</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
@@ -53,6 +58,15 @@
             0% { top: -10%; } 
             100% { top: 110%; } 
         }
+        /* iPhone: dokunmatik ekranda hover yok, gizli sil butonlarını görünür yap */
+        @media (hover: none) {
+            .group .opacity-0 { opacity: 1 !important; }
+        }
+        /* iPhone: 16px altındaki inputlara dokununca sayfa zoom yapıyor, bunu engelle */
+        @media (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+        body { padding-bottom: env(safe-area-inset-bottom); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #050a08; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 255, 159, 0.2); border-radius: 3px; }
@@ -82,9 +96,9 @@
                 <span>📊</span>
                 <span class="hidden sm:inline">KARNE</span>
             </button>
-            <button id="backup-btn" class="text-xs border border-[#00ff9f]/30 px-3 py-1.5 hover:bg-[#00ff9f]/20 text-[#00ff9f] rounded font-bold transition-all hidden md:flex items-center space-x-1" title="Verilerini Bilgisayarına Güvenle İndir">
+            <button id="backup-btn" class="text-xs border border-[#00ff9f]/30 px-3 py-1.5 hover:bg-[#00ff9f]/20 text-[#00ff9f] rounded font-bold transition-all flex items-center space-x-1" title="Veri Kasası: Yedek indir / geri yükle">
                 <span>💾</span>
-                <span>YEDEK</span>
+                <span class="hidden sm:inline">KASA</span>
             </button>
             <div id="auth-section">
                 <button id="auth-btn" class="text-[#00ff9f] border border-[#00ff9f]/30 px-3 py-1.5 text-xs uppercase hover:bg-[#00ff9f] hover:text-black transition-all duration-300 rounded font-bold">
@@ -101,7 +115,8 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <span class="text-base">💰</span>
-                            <h3 class="text-xs text-emerald-400 font-bold uppercase tracking-wider">AYLIK GELİR PUSULASI & CİRO RADARI</h3>
+                            <h3 class="text-xs text-emerald-400 font-bold uppercase tracking-wider">AYLIK GELİR PUSULASI <span id="income-month-label" class="text-emerald-300/70"></span></h3>
+                            <button id="income-history-toggle" class="text-[9px] border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded hover:bg-emerald-500/20">📜 KAYITLAR</button>
                         </div>
                         <button id="edit-monthly-goal-btn" class="text-[10px] text-gray-400 hover:text-emerald-300 transition-colors flex items-center space-x-1 cursor-pointer" title="Aylık Hedefi Değiştir">
                             <span>Hedef:</span>
@@ -124,6 +139,17 @@
                     <input type="text" id="quick-income-source" placeholder="Satış Kaynağı (Örn: Dolap - Hotwheels)" class="flex-1 bg-[#050a08] border border-emerald-500/20 text-white rounded p-1 text-[10px] focus:ring-emerald-400 h-7">
                     <input type="number" id="quick-income-amount" placeholder="₺ Miktar" class="w-20 bg-[#050a08] border border-emerald-500/20 text-emerald-300 rounded p-1 text-[10px] font-mono focus:ring-emerald-400 h-7 text-center">
                     <button id="quick-income-add-btn" class="px-3 h-7 bg-emerald-500 hover:bg-white text-black font-bold text-[10px] uppercase rounded transition-all">EKLE</button>
+                </div>
+
+                <div id="income-history-panel" class="hidden mt-3 pt-3 border-t border-emerald-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">BU AYIN KAYITLARI</span>
+                        <div id="income-entries-list" class="space-y-1 max-h-40 overflow-y-auto pr-1"></div>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">GEÇMİŞ AYLAR (ARŞİV)</span>
+                        <div id="income-archive-list" class="space-y-1 max-h-40 overflow-y-auto pr-1"></div>
+                    </div>
                 </div>
             </div>
             <div class="bg-[#0a1814] border border-emerald-500/20 p-2.5 rounded flex items-center justify-center space-x-3 shrink-0 h-full self-stretch">
@@ -156,6 +182,7 @@
                             <button id="edit-name-btn" class="text-[11px] text-gray-400 hover:text-[#00ff9f] transition-colors p-1" title="Siber İsmini Düzenle">✏️</button>
                         </div>
                         <p id="user-email-display" class="text-[9px] text-[#00ff9f]/60 font-mono">Giriş Bekleniyor</p>
+                        <p id="sync-status" class="text-[9px] font-mono text-gray-500">☁️ Bulut: bağlı değil (sadece bu cihaz)</p>
                         <p id="user-rank" class="text-gray-400 text-[10px] uppercase tracking-widest mt-0.5">Lvl 1 // Yolcu // Safha 1</p>
                     </div>
                 </div>
@@ -572,6 +599,40 @@
         </div>
     </div>
 
+    <div id="vault-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#07110e] border-2 border-[#00ff9f]/50 rounded-lg max-w-lg w-full p-6 space-y-4 shadow-[0_0_30px_rgba(0,255,159,0.2)] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-[#00ff9f]/30 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">💾</span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-widest">VERİ KASASI</h3>
+                        <span class="text-[10px] text-gray-400">İlerlemen bir daha kaybolmasın diye</span>
+                    </div>
+                </div>
+                <button id="close-vault-btn" class="text-gray-400 hover:text-white text-lg">✕</button>
+            </div>
+
+            <div id="vault-ios-tip" class="hidden bg-amber-950/30 border border-amber-500/40 rounded p-3 text-[11px] text-amber-200 leading-relaxed">
+                📱 <strong>iPhone uyarısı:</strong> Safari, 7 gün girmediğin sitelerin verilerini silebiliyor. Korunmak için:
+                <br>1) <strong>Google ile bağlan</strong> (veriler buluta yedeklenir)
+                <br>2) Safari'de Paylaş ⬆️ → <strong>Ana Ekrana Ekle</strong> (uygulama gibi açılır, bu silme kuralı uygulanmaz)
+            </div>
+
+            <div id="vault-cloud-info" class="text-[11px] text-gray-300 font-mono"></div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button id="vault-download-btn" class="py-2 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">⬇️ YEDEK İNDİR</button>
+                <button id="vault-restore-btn" class="py-2 border border-[#00ff9f]/50 text-[#00ff9f] font-bold text-xs rounded hover:bg-[#00ff9f]/20">⬆️ DOSYADAN YÜKLE</button>
+                <input type="file" id="vault-file-input" accept=".json,application/json" class="hidden">
+            </div>
+
+            <div>
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">OTOMATİK GÜNLÜK YEDEKLER (BU CİHAZ)</span>
+                <div id="vault-snapshots-list" class="space-y-1.5"></div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -661,25 +722,128 @@
             lastDecayApplied: "",
             streak: { current: 0, lastActiveDate: "", dailyCompleted: false, shields: 1 },
             monthlyTarget: 10000,
-            monthlyEarned: 0
+            monthlyEarned: 0,
+            incomeEntries: [],
+            incomeMigrated: false,
+            lastSeenMonth: ""
         };
 
+        // Tarihler artık cihazın yerel saatine göre (Türkiye). Eskiden UTC kullanıldığı için
+        // gece 00:00-03:00 arası yapılanlar bir önceki güne yazılıyordu.
+        const monthNames = ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"];
+        function toLocalDateStr(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
         function getTodayStr() {
-            return new Date().toISOString().split('T')[0];
+            return toLocalDateStr(new Date());
+        }
+        function getYesterdayStr() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return toLocalDateStr(d);
+        }
+        function getMonthKey(d = new Date()) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+        function monthKeyLabel(key) {
+            const [y, m] = key.split('-');
+            return `${monthNames[parseInt(m, 10) - 1]} ${y}`;
+        }
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
+        let logIdCounter = 0;
         function recordActionLog(text, xp, cat) {
             if (!localState.actionLogs) localState.actionLogs = [];
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
-            localState.actionLogs.push({
-                id: Date.now(),
+            const log = {
+                id: Date.now() * 10 + (logIdCounter++ % 10),
                 text,
                 xp,
                 cat,
                 dateStr: getTodayStr(),
                 timeStr
+            };
+            localState.actionLogs.push(log);
+            return log;
+        }
+
+        // ---- AYLIK GELİR DEFTERİ ----
+        // Her gelir artık tarihli bir kayıt. "Bu ay biriken" her seferinde bu aya ait kayıtlardan hesaplanır,
+        // böylece yeni ay başlayınca otomatik sıfırlanır ve eski aylar arşivde kalır.
+        const INCOME_LOG_RE = /^💰 Gelir Eklendi: (.*) \(\+(\d+) ₺\)$/;
+
+        function migrateIncomeLedger() {
+            if (!Array.isArray(localState.incomeEntries)) localState.incomeEntries = [];
+            if (localState.incomeMigrated) return;
+
+            const entries = [];
+            (localState.actionLogs || []).forEach(l => {
+                const m = INCOME_LOG_RE.exec(l.text || '');
+                if (m && l.dateStr) {
+                    entries.push({ id: l.id, logId: l.id, source: m[1], amount: parseInt(m[2], 10), dateStr: l.dateStr, xp: l.xp || 0 });
+                }
             });
+            const sumFromLogs = entries.reduce((s, e) => s + e.amount, 0);
+            const oldTotal = localState.monthlyEarned || 0;
+            const remainder = oldTotal - sumFromLogs;
+
+            if (remainder > 0) {
+                // Kaydı bulunamayan kısım: en son gelir kaydının ayına, yoksa geçen aya yazılır.
+                let dateStr;
+                if (entries.length) {
+                    dateStr = entries.map(e => e.dateStr).sort().pop();
+                } else {
+                    const d = new Date();
+                    d.setDate(1);
+                    d.setMonth(d.getMonth() - 1);
+                    dateStr = toLocalDateStr(d);
+                }
+                entries.push({ id: Date.now(), logId: null, source: "Önceki kayıtlar (detaysız)", amount: remainder, dateStr, xp: 0 });
+            }
+
+            localState.incomeEntries = entries;
+            localState.incomeMigrated = true;
+        }
+
+        function getMonthIncome(key = getMonthKey()) {
+            return (localState.incomeEntries || [])
+                .filter(e => e.dateStr && e.dateStr.slice(0, 7) === key)
+                .reduce((s, e) => s + (e.amount || 0), 0);
+        }
+
+        function addIncomeEntry(source, amount) {
+            const earnedXp = Math.floor(amount / 20);
+            localState.xp = (localState.xp || 0) + earnedXp;
+            increaseStat("FIN", 10);
+            const log = recordActionLog(`💰 Gelir Eklendi: ${source} (+${amount} ₺)`, earnedXp, "FIN");
+            if (!Array.isArray(localState.incomeEntries)) localState.incomeEntries = [];
+            localState.incomeEntries.push({ id: log.id, logId: log.id, source, amount, dateStr: getTodayStr(), xp: earnedXp });
+            localState.monthlyEarned = getMonthIncome();
+            recordStreakAction();
+            return earnedXp;
+        }
+
+        function checkMonthRollover() {
+            const nowKey = getMonthKey();
+            let prev = localState.lastSeenMonth;
+            if (!prev) {
+                // İlk açılış (güncellemeden sonra): geçmiş aylarda gelir varsa en sonuncusunu özetle
+                const pastKeys = [...new Set((localState.incomeEntries || []).map(e => (e.dateStr || '').slice(0, 7)))].filter(k => k && k < nowKey).sort();
+                prev = pastKeys.pop() || "";
+            }
+            if (prev && prev !== nowKey) {
+                const prevTotal = getMonthIncome(prev);
+                const target = localState.monthlyTarget || 10000;
+                const hit = prevTotal >= target;
+                setTimeout(() => triggerAlert(
+                    `🗓️ Yeni ay başladı, gelir pusulası sıfırlandı! ${monthKeyLabel(prev)}: ${prevTotal.toLocaleString('tr-TR')} ₺ ${hit ? '— HEDEF TUTTU 🏆' : '(arşive kaydedildi)'}`
+                ), 1200);
+            }
+            localState.lastSeenMonth = nowKey;
+            localState.monthlyEarned = getMonthIncome(nowKey);
         }
 
         function sanitizeData() {
@@ -706,6 +870,9 @@
                 if (isNaN(localState.stats[key])) localState.stats[key] = 0;
             }
             if (isNaN(localState.xp)) localState.xp = 0;
+            if (!localState.dayNotes) localState.dayNotes = {};
+            if (!localState.streak) localState.streak = { current: 0, lastActiveDate: "", dailyCompleted: false, shields: 1 };
+            migrateIncomeLedger();
         }
 
         function loadLocalVault() {
@@ -742,15 +909,19 @@
                     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
                     
                     if (diffDays > 1) {
-                        if (localState.streak.shields > 0) {
-                            localState.streak.shields--;
-                            localState.streak.current = Math.max(0, localState.streak.current - (diffDays - 1));
-                            writeLog("[SİSTEM] Kalkan kullanıldı, seri korundu.", "BİLGİ");
+                        const missed = diffDays - 1;
+                        // Her kalkan 1 kaçırılmış günü korur. Eskiden kalkan kullanılsa bile seri kaçırılan gün kadar düşüyordu.
+                        if ((localState.streak.shields || 0) >= missed) {
+                            localState.streak.shields -= missed;
+                            writeLog(`[SİSTEM] ${missed} kalkan kullanıldı, seri korundu.`, "BİLGİ");
+                            setTimeout(() => triggerAlert(`🛡️ Kalkan devrede! ${missed} gün kaçırdın ama ${localState.streak.current} günlük serin korundu.`), 1500);
                         } else {
                             localState.streak.current = 0;
                             writeLog("[SİSTEM] Seri sıfırlandı.", "UYARI");
                         }
-                        localState.streak.lastActiveDate = today;
+                        // Eskiden burada bugünün tarihi yazılıyordu; bu yüzden hiçbir şey yapmadan "BUGÜN AKTİF" görünüyordu.
+                        localState.streak.lastActiveDate = getYesterdayStr();
+                        localState.streak.dailyCompleted = false;
                     }
                 }
                 
@@ -841,10 +1012,10 @@
                     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
                     
                     if (diffDays > 1) {
-                        if (localState.streak.shields > 0) {
-                            localState.streak.shields--;
-                            localState.streak.current = Math.max(0, localState.streak.current - (diffDays - 1));
-                            writeLog("[SİSTEM] Kalkan kullanıldı, seri korundu.", "BİLGİ");
+                        const missed = diffDays - 1;
+                        if ((localState.streak.shields || 0) >= missed) {
+                            localState.streak.shields -= missed;
+                            writeLog(`[SİSTEM] ${missed} kalkan kullanıldı, seri korundu.`, "BİLGİ");
                         } else {
                             localState.streak.current = 0;
                             writeLog("[SİSTEM] Seri sıfırlandı.", "UYARI");
@@ -862,61 +1033,165 @@
             }
         }
         
+        // ---- OTOMATİK GÜNLÜK YEDEKLER (bu cihazda, son 5 gün) ----
+        const SNAPSHOT_KEY = "personaxp_snapshots_v1";
+        function getSnapshots() {
+            try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]"); } catch (e) { return []; }
+        }
+        function saveSnapshot(reason = "günlük", force = false) {
+            try {
+                // Boş/yeni profili yedekleyip gerçek yedekleri itme
+                if (!(localState.xp > 0) && !(localState.actionLogs || []).length) return;
+                let snaps = getSnapshots();
+                const today = getTodayStr();
+                if (!force && snaps.some(sn => sn.date === today && sn.reason === "günlük")) return;
+                snaps.push({ date: today, time: new Date().toTimeString().slice(0, 5), reason, xp: localState.xp || 0, logs: (localState.actionLogs || []).length, data: JSON.stringify(localState) });
+                snaps = snaps.slice(-5);
+                while (snaps.length) {
+                    try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snaps)); break; }
+                    catch (e) { snaps.shift(); }
+                }
+            } catch (e) { console.warn("Snapshot error", e); }
+        }
+
+        // Tarayıcıdan bu sitenin verilerini kalıcı tutmasını iste (silinme riskini azaltır)
+        try { navigator.storage?.persist?.(); } catch (e) {}
+
         loadLocalVault();
         checkDailyResetsAndDecay();
+        checkMonthRollover();
+        saveSnapshot("günlük");
 
-        async function securePersistVault() {
-            localState.lastModified = Date.now();
+        // ---- BULUT EŞİTLEME (güvenli sürüm) ----
+        // syncState: 'off' (giriş yok) | 'syncing' | 'ok' | 'error'
+        let syncState = 'off';
+        let cloudErrorShown = false;
+        let cloudReadOk = false;      // bulut verisi bu oturumda başarıyla okundu mu?
+        let lastSyncAttempt = 0;
+
+        function setSyncStatus(state, extra = "") {
+            syncState = state;
+            const el = document.getElementById('sync-status');
+            if (!el) return;
+            const map = {
+                off: ['☁️ Bulut: bağlı değil (sadece bu cihaz)', 'text-gray-500'],
+                syncing: ['☁️ Bulut: eşitleniyor...', 'text-amber-300'],
+                ok: ['☁️ Bulut: kaydedildi ✔', 'text-[#00ff9f]/70'],
+                error: ['⚠️ Bulut: kaydedilemedi! (veri bu cihazda güvende)', 'text-red-400']
+            };
+            const [txt, cls] = map[state] || map.off;
+            el.innerText = txt + (extra ? ` ${extra}` : '');
+            el.className = `text-[9px] font-mono ${cls}`;
+        }
+
+        function cloudDocRef(uid) {
+            return doc(db, 'artifacts', 'personaxp-ae8ff', 'users', uid, 'profile', 'userData');
+        }
+
+        async function pushToCloud() {
+            if (!currentUser) return;
             try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localState));
-            } catch (e) {
-                console.warn("LocalStorage persist error", e);
-            }
-
-            if (currentUser) {
-                try {
-                    const safeData = JSON.parse(JSON.stringify(localState)); 
-                    const docRef = doc(db, 'artifacts', 'personaxp-ae8ff', 'users', currentUser.uid, 'profile', 'userData');
-                    await setDoc(docRef, safeData, { merge: true });
-                } catch (err) {
-                    console.warn("Bulut eşitleme hatası, yerel kasa devrede.", err);
+                const safeData = JSON.parse(JSON.stringify(localState));
+                await setDoc(cloudDocRef(currentUser.uid), safeData);
+                setSyncStatus('ok');
+                cloudErrorShown = false;
+            } catch (err) {
+                console.warn("Bulut eşitleme hatası, yerel kasa devrede.", err);
+                setSyncStatus('error');
+                if (!cloudErrorShown) {
+                    cloudErrorShown = true;
+                    triggerAlert(`Buluta kayıt başarısız: ${err.code || err.message}. Verin bu cihazda duruyor, Kasa'dan yedek indirmeni öneririm.`, 'error');
                 }
             }
         }
 
+        async function securePersistVault() {
+            localState.lastModified = Date.now();
+            localState.monthlyEarned = getMonthIncome();
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localState));
+            } catch (e) {
+                console.warn("LocalStorage persist error", e);
+                triggerAlert("Cihaz hafızasına yazılamadı! Hemen Kasa'dan yedek indir.", 'error');
+            }
+            saveSnapshot("günlük");
+
+            // Önemli: bulut verisi henüz okunmadan buluta yazma. Eskiden giriş yüklenirken yapılan
+            // bir tıklama, boş/eksik veriyi buluttaki asıl verinin üstüne yazabiliyordu.
+            if (currentUser && syncState !== 'syncing') {
+                if (cloudReadOk) {
+                    await pushToCloud();
+                } else if (Date.now() - lastSyncAttempt > 60000) {
+                    // Bulut okunamamıştı: önce tekrar oku, sonra yaz (körlemesine üstüne yazma)
+                    setTimeout(() => syncCloudVault(currentUser), 0);
+                }
+            }
+        }
+
+        function progressScore(st) {
+            return (st?.xp || 0) + (st?.actionLogs?.length || 0);
+        }
+
         async function syncCloudVault(user) {
+            setSyncStatus('syncing');
+            lastSyncAttempt = Date.now();
             writeLog(`${user.email} için Firestore senkronizasyonu başlatıldı...`);
             try {
-                const docRef = doc(db, 'artifacts', 'personaxp-ae8ff', 'users', user.uid, 'profile', 'userData');
-                const snap = await getDoc(docRef);
-                if (snap.exists()) {
+                const snap = await getDoc(cloudDocRef(user.uid));
+                if (snap.exists() && snap.data()) {
                     const cloudData = snap.data();
-                    if (cloudData) {
-                        const cloudTime = cloudData.lastModified || 0;
-                        const localTime = localState.lastModified || 0;
+                    const cloudTime = cloudData.lastModified || 0;
+                    const localTime = localState.lastModified || 0;
+                    let useCloud = cloudTime > localTime;
 
-                        if (cloudTime > localTime) {
-                            localState = Object.assign(localState, cloudData);
-                            writeLog(`Bulut verileri daha güncel, yerel kasaya kopyalandı.`, 'BAŞARI');
-                        } else if (localTime > cloudTime) {
-                            writeLog(`Yerel veriler daha güncel, buluta eşitlenecek.`, 'BİLGİ');
-                        } else {
-                            if (!localState.lastModified) {
-                                localState = Object.assign(localState, cloudData);
-                            }
+                    // Kazanan taraf, kaybedenden daha az ilerleme içeriyorsa sor (ilerleme kaybını önler)
+                    const winnerScore = useCloud ? progressScore(cloudData) : progressScore(localState);
+                    const loserScore = useCloud ? progressScore(localState) : progressScore(cloudData);
+                    if (loserScore > winnerScore && loserScore > 0) {
+                        useCloud = confirm(
+                            `Bu cihazdaki veri ile buluttaki veri farklı.\n\n` +
+                            `☁️ Bulut: ${(cloudData.xp || 0).toLocaleString('tr-TR')} XP, ${(cloudData.actionLogs || []).length} kayıt\n` +
+                            `📱 Bu cihaz: ${(localState.xp || 0).toLocaleString('tr-TR')} XP, ${(localState.actionLogs || []).length} kayıt\n\n` +
+                            `TAMAM = Buluttakini kullan\nİPTAL = Bu cihazdakini kullan\n\n(Seçmediğin taraf otomatik yedeklere kaydedilir.)`
+                        );
+                    }
+
+                    if (useCloud) {
+                        saveSnapshot("buluttan önce", true); // yerel veriyi kaybetmeden önce yedekle
+                        localState = Object.assign(localState, cloudData);
+                        if (!cloudData.incomeMigrated) {
+                            // Bulutta eski formatta veri var: gelir defterini buluttaki kayıtlardan yeniden kur
+                            localState.incomeMigrated = false;
+                            localState.incomeEntries = [];
+                            localState.lastSeenMonth = cloudData.lastSeenMonth || "";
                         }
+                        writeLog(`Bulut verileri yüklendi.`, 'BAŞARI');
+                    } else {
+                        // buluttaki eski veriyi de yedekle
+                        const backupLocal = localState;
+                        localState = Object.assign({}, localState, cloudData);
+                        saveSnapshot("bulut kopyası", true);
+                        localState = backupLocal;
+                        writeLog(`Bu cihazdaki veriler daha güncel, buluta yazılacak.`, 'BİLGİ');
                     }
                 } else {
-                    const safeData = JSON.parse(JSON.stringify(localState));
-                    await setDoc(docRef, safeData, { merge: true });
-                    writeLog(`Yerel veriler bulut profiline ilk kez yazıldı.`, 'BİLGİ');
+                    writeLog(`Bulut profili boş, bu cihazdaki veriler ilk kez yazılacak.`, 'BİLGİ');
                 }
+                cloudReadOk = true;
+                setSyncStatus('ok');
             } catch (e) {
+                cloudReadOk = false;
+                setSyncStatus('error');
                 writeLog(`Buluta ulaşılamadı, yerel çelik kasa devrede: ${e.message}`, 'UYARI');
+                if (!cloudErrorShown) {
+                    cloudErrorShown = true;
+                    triggerAlert(`Buluta bağlanılamadı (${e.code || e.message}). Veriler şimdilik sadece bu cihazda kaydediliyor.`, 'error');
+                }
             }
 
             sanitizeData();
-            checkDailyResetsAndDecay(); 
+            checkDailyResetsAndDecay();
+            checkMonthRollover();
             await securePersistVault();
             updateDashboardUI();
         }
@@ -959,7 +1234,7 @@
             document.getElementById('streak-shield-count').innerText = `${localState.streak?.shields ?? 1} Adet`;
             
             const statusBadge = document.getElementById('streak-status');
-            if (localState.streak?.lastActiveDate === getTodayStr()) {
+            if (localState.streak?.lastActiveDate === getTodayStr() && localState.streak?.dailyCompleted) {
                 statusBadge.innerText = "BUGÜN AKTİF ✔";
                 statusBadge.className = "text-[10px] px-2.5 py-1 bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-bold rounded uppercase tracking-wider block";
             } else {
@@ -968,7 +1243,9 @@
             }
 
             const target = localState.monthlyTarget || 10000;
-            const earned = localState.monthlyEarned || 0;
+            const earned = getMonthIncome();
+            localState.monthlyEarned = earned;
+            document.getElementById('income-month-label').innerText = `// ${monthKeyLabel(getMonthKey())}`;
             const pct = Math.min(100, Math.round((earned / target) * 100));
             document.getElementById('monthly-target-display').innerText = `${target.toLocaleString('tr-TR')} ₺`;
             document.getElementById('monthly-earned-display').innerText = `${earned.toLocaleString('tr-TR')} ₺`;
@@ -978,7 +1255,7 @@
 
             const now = new Date();
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const daysLeft = Math.max(1, daysInMonth - now.getDate());
+            const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1); // bugün dahil
             document.getElementById('month-days-left').innerText = daysLeft;
             const neededDaily = Math.max(0, Math.ceil((target - earned) / daysLeft));
             document.getElementById('daily-needed-pace').innerText = `${neededDaily.toLocaleString('tr-TR')} ₺ / gün`;
@@ -1001,7 +1278,56 @@
             drawRadar();
             renderActivityHeatmap();
             renderDeadlines();
+            renderIncomePanels();
         }
+
+        function renderIncomePanels() {
+            const list = document.getElementById('income-entries-list');
+            const arch = document.getElementById('income-archive-list');
+            if (!list || !arch) return;
+            const nowKey = getMonthKey();
+            const entries = (localState.incomeEntries || []).filter(e => (e.dateStr || '').slice(0, 7) === nowKey).sort((a, b) => (b.dateStr || '').localeCompare(a.dateStr || ''));
+            list.innerHTML = entries.length ? entries.map(e => `
+                <div class="flex items-center justify-between bg-[#050a08] border border-emerald-500/10 rounded px-2 py-1 text-[10px]">
+                    <span class="text-gray-400 font-mono mr-2">${esc(e.dateStr.slice(8, 10))}.${esc(e.dateStr.slice(5, 7))}</span>
+                    <span class="text-white flex-1 truncate">${esc(e.source)}</span>
+                    <span class="text-emerald-300 font-mono font-bold ml-2">+${(e.amount || 0).toLocaleString('tr-TR')} ₺</span>
+                    <button class="ml-2 text-gray-500 hover:text-red-400" onclick="window.deleteIncome('${e.id}')" title="Yanlış kaydı sil">✕</button>
+                </div>`).join('') : `<div class="text-[10px] text-gray-600 font-mono py-2">Bu ay henüz gelir girilmedi. İlk satışı ekle! 💪</div>`;
+
+            const totals = {};
+            (localState.incomeEntries || []).forEach(e => {
+                const k = (e.dateStr || '').slice(0, 7);
+                if (k && k !== nowKey) totals[k] = (totals[k] || 0) + (e.amount || 0);
+            });
+            const keys = Object.keys(totals).sort().reverse();
+            const target = localState.monthlyTarget || 10000;
+            arch.innerHTML = keys.length ? keys.map(k => `
+                <div class="flex items-center justify-between bg-[#050a08] border border-emerald-500/10 rounded px-2 py-1 text-[10px]">
+                    <span class="text-gray-300 font-mono">${monthKeyLabel(k)}</span>
+                    <span class="font-mono font-bold ${totals[k] >= target ? 'text-amber-300' : 'text-emerald-300'}">${totals[k].toLocaleString('tr-TR')} ₺ ${totals[k] >= target ? '🏆' : ''}</span>
+                </div>`).join('') : `<div class="text-[10px] text-gray-600 font-mono py-2">Henüz arşivlenmiş ay yok.</div>`;
+        }
+
+        document.getElementById('income-history-toggle').onclick = () => {
+            document.getElementById('income-history-panel').classList.toggle('hidden');
+            playSynthSound('click');
+        };
+
+        window.deleteIncome = async (id) => {
+            const entry = (localState.incomeEntries || []).find(e => String(e.id) === String(id));
+            if (!entry) return;
+            if (!confirm(`"${entry.source}" (+${entry.amount} ₺) kaydı silinsin mi? Kazandırdığı XP de geri alınır.`)) return;
+            localState.incomeEntries = localState.incomeEntries.filter(e => String(e.id) !== String(id));
+            if (entry.logId != null) {
+                const before = (localState.actionLogs || []).length;
+                localState.actionLogs = (localState.actionLogs || []).filter(l => String(l.id) !== String(entry.logId));
+                if (localState.actionLogs.length < before) localState.xp = Math.max(0, (localState.xp || 0) - (entry.xp || 0));
+            }
+            playSynthSound('click');
+            await securePersistVault();
+            updateDashboardUI();
+        };
 
         const editMonthlyGoalBtn = document.getElementById('edit-monthly-goal-btn');
         if (editMonthlyGoalBtn) {
@@ -1064,7 +1390,7 @@
                 return `
                 <div class="bg-[#0a1814] border border-red-500/10 p-2 rounded flex items-center justify-between group hover:border-red-500/30 transition-colors">
                     <div class="flex flex-col">
-                        <span class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[200px]" title="${d.title}">${d.title}</span>
+                        <span class="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[200px]" title="${esc(d.title)}">${esc(d.title)}</span>
                         <span class="text-[9px] text-gray-500 font-mono">${d.date.split('-').reverse().join('.')}</span>
                     </div>
                     <div class="flex items-center space-x-2">
@@ -1122,7 +1448,7 @@
             list.innerHTML = localState.directives.map(d => `
                 <div class="bg-[#0a1814] border border-[#00ff9f]/10 p-3 rounded flex items-center justify-between hover:border-[#00ff9f]/30 transition-all group">
                     <div>
-                        <div class="text-xs font-bold text-white">${d.text}</div>
+                        <div class="text-xs font-bold text-white">${esc(d.text)}</div>
                         <div class="flex items-center space-x-2 text-[9px] text-[#00ff9f]/80 mt-1">
                             <span class="px-1 border border-[#00ff9f]/30 rounded">${d.cat}</span>
                             ${d.subcat ? `<span class="px-1 border border-blue-400/30 text-blue-400 rounded">${d.subcat}</span>` : ''}
@@ -1157,7 +1483,7 @@
                 return `
                 <div class="${isCompletedToday ? 'bg-[#050a08] opacity-50 border-gray-800' : 'bg-[#0a1814] border-yellow-500/20'} border p-2.5 rounded flex items-center justify-between transition-all group">
                     <div>
-                        <div class="text-xs font-bold ${isCompletedToday ? 'text-gray-500 line-through' : 'text-yellow-300'}">${r.text}</div>
+                        <div class="text-xs font-bold ${isCompletedToday ? 'text-gray-500 line-through' : 'text-yellow-300'}">${esc(r.text)}</div>
                         <div class="text-[9px] text-gray-400 mt-0.5">${r.cat}${r.subcat ? ` + ${r.subcat}` : ''} • +${r.xp} XP</div>
                     </div>
                     <div class="flex items-center space-x-2">
@@ -1286,7 +1612,7 @@
 
             document.getElementById('debrief-tasks-count').innerText = weeklyTasks;
             document.getElementById('debrief-pomo-count').innerText = `${weeklyPomoMins} dk`;
-            document.getElementById('debrief-income-count').innerText = `${(localState.monthlyEarned || 0).toLocaleString('tr-TR')} ₺`;
+            document.getElementById('debrief-income-count').innerText = `${getMonthIncome().toLocaleString('tr-TR')} ₺`;
             
             let grade = 'C';
             if (weeklyTasks >= 10 && weeklyPomoMins >= 120) grade = 'S';
@@ -1305,19 +1631,14 @@
 
         document.getElementById('debrief-income-add-btn').onclick = async () => {
             const source = document.getElementById('debrief-income-source').value.trim();
-            const amount = parseInt(document.getElementById('debrief-income-amount').value);
+            const amount = Math.round(parseFloat(document.getElementById('debrief-income-amount').value));
             
             if (!source || isNaN(amount) || amount <= 0) {
                 triggerAlert('Geçerli bir kaynak ve miktar girin!', 'error');
                 return;
             }
             
-            localState.monthlyEarned = (localState.monthlyEarned || 0) + amount;
-            const earnedXp = Math.floor(amount / 20); 
-            localState.xp = (localState.xp || 0) + earnedXp;
-            increaseStat("FIN", 10);
-            
-            recordActionLog(`💰 Gelir Eklendi: ${source} (+${amount} ₺)`, earnedXp, "FIN");
+            const earnedXp = addIncomeEntry(source, amount);
             
             document.getElementById('debrief-income-source').value = "";
             document.getElementById('debrief-income-amount').value = "";
@@ -1333,19 +1654,14 @@
         if (quickIncomeBtn) {
             quickIncomeBtn.onclick = async () => {
                 const source = document.getElementById('quick-income-source').value.trim();
-                const amount = parseInt(document.getElementById('quick-income-amount').value);
+                const amount = Math.round(parseFloat(document.getElementById('quick-income-amount').value));
                 
                 if (!source || isNaN(amount) || amount <= 0) {
                     triggerAlert('Geçerli bir kaynak ve miktar girin!', 'error');
                     return;
                 }
                 
-                localState.monthlyEarned = (localState.monthlyEarned || 0) + amount;
-                const earnedXp = Math.floor(amount / 20); 
-                localState.xp = (localState.xp || 0) + earnedXp;
-                increaseStat("FIN", 10);
-                
-                recordActionLog(`💰 Gelir Eklendi: ${source} (+${amount} ₺)`, earnedXp, "FIN");
+                const earnedXp = addIncomeEntry(source, amount);
                 
                 document.getElementById('quick-income-source').value = "";
                 document.getElementById('quick-income-amount').value = "";
@@ -1368,9 +1684,44 @@
                 } else {
                     toggleLowBatteryBtn.innerText = "⚡ NORMALE DÖN";
                     document.getElementById('battery-desc').innerText = "Düşük Enerji (Koruma) Modu Aktif";
+                    renderLowBatteryTasks();
                 }
             };
         }
+
+        // Düşük enerji modu: seriyi korumak için 3 mikro görev (eskiden bu liste hiç doldurulmuyordu)
+        function renderLowBatteryTasks() {
+            const box = document.getElementById('low-battery-tasks-list');
+            if (!box) return;
+            const tasks = [
+                ['💧', '1 bardak su iç', 'water'],
+                ['🫁', '2 dakika nefes molası ver', 'breath'],
+                ['✍️', 'Bugünü tek cümleyle yaz', 'note']
+            ];
+            box.innerHTML = tasks.map(([icon, label, key]) => `
+                <button onclick="window.microTask('${key}')" class="w-full text-left bg-amber-950/20 border border-amber-500/30 hover:bg-amber-500/20 rounded px-3 py-2 flex justify-between items-center">
+                    <span>${icon} ${label}</span><span class="text-[10px] text-amber-300 font-mono">+5 XP</span>
+                </button>`).join('') + `<div class="text-[10px] text-amber-100/50 pt-1">Birini yapman seriyi korumaya yeter. Gerisi dinlenmek. 🌙</div>`;
+        }
+
+        window.microTask = async (key) => {
+            if (key === 'water') return document.getElementById('bio-water-btn').click();
+            if (key === 'breath') return document.getElementById('bio-breath-btn').click();
+            if (key === 'note') {
+                const line = prompt("Bugünü tek cümleyle anlat:");
+                if (!line || !line.trim()) return;
+                const today = getTodayStr();
+                if (!localState.dayNotes) localState.dayNotes = {};
+                localState.dayNotes[today] = (localState.dayNotes[today] ? localState.dayNotes[today] + "\n" : "") + line.trim();
+                localState.xp = (localState.xp || 0) + 5;
+                increaseStat("MNT", 5);
+                recordActionLog(`✍️ Tek Cümle Günlük: ${line.trim()}`, 5, "MNT");
+                recordStreakAction();
+                playSynthSound('success');
+                await securePersistVault();
+                updateDashboardUI();
+            }
+        };
 
         document.getElementById('edit-name-btn').onclick = async () => {
             const currentName = localState.customName || (currentUser ? currentUser.displayName : "MISAFIR_KULLANICI");
@@ -1395,7 +1746,7 @@
             for (let i = 29; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(d.getDate() - i);
-                days.push(d.toISOString().split('T')[0]);
+                days.push(toLocalDateStr(d));
             }
 
             const actionCounts = {};
@@ -1430,7 +1781,7 @@
                 <div class="bg-[#050a08] border border-[#00ff9f]/10 p-2 rounded text-[10px] flex justify-between items-center">
                     <div>
                         <span class="text-gray-500 font-mono">[${l.timeStr || l.time || '--:--'}]</span>
-                        <span class="text-white font-bold ml-1">${l.text}</span>
+                        <span class="text-white font-bold ml-1">${esc(l.text)}</span>
                     </div>
                     <span class="text-[#00ff9f] font-mono font-bold">+${l.xp} XP</span>
                 </div>
@@ -1498,6 +1849,7 @@
         };
 
         document.getElementById('bio-breath-btn').onclick = async () => {
+            localState.xp = (localState.xp || 0) + 5;
             increaseStat("HLT", 5);
             increaseStat("MNT", 5);
             recordActionLog("🫁 2 Dk Nefes Molası", 5, "MNT");
@@ -1508,9 +1860,8 @@
             updateDashboardUI();
         };
 
-        const monthNames = ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"];
         let calViewingDate = new Date();
-        let selectedCalendarDateStr = new Date().toISOString().split('T')[0];
+        let selectedCalendarDateStr = getTodayStr();
 
         function renderCalendar() {
             const year = calViewingDate.getFullYear();
@@ -1620,7 +1971,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                         <div class="text-[10px] text-gray-400 font-mono leading-relaxed">
                             <span class="mr-1 opacity-70">[${log.timeStr || '--:--'}]</span>
-                            <strong class="text-white">${log.text}</strong>
+                            <strong class="text-white">${esc(log.text)}</strong>
                         </div>
                         <span class="text-[9px] text-[#00ff9f] font-mono font-bold shrink-0 self-start sm:self-auto">+${log.xp || 0} XP</span>
                     </div>
@@ -1814,20 +2165,102 @@
             };
         });
 
-        document.getElementById('backup-btn').onclick = () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localState, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `personaxp_yedek_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            triggerAlert("Tüm verilerin tek tıkla bilgisayarına indirildi!");
+        // ---- VERİ KASASI ----
+        const vaultModal = document.getElementById('vault-modal');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+        function renderVault() {
+            document.getElementById('vault-ios-tip').classList.toggle('hidden', !(isIOS && !isStandalone));
+            const info = document.getElementById('vault-cloud-info');
+            info.innerHTML = currentUser
+                ? `☁️ Bulut yedeği: <strong class="text-[#00ff9f]">${esc(currentUser.email)}</strong> — ${syncState === 'ok' ? 'son durum kaydedildi ✔' : syncState === 'error' ? '<span class="text-red-400">kayıt hatası!</span>' : 'eşitleniyor...'}`
+                : `☁️ Google ile bağlı değilsin. Veriler <strong class="text-amber-300">sadece bu cihazda</strong>.`;
+            info.innerHTML += `<br>📦 Şu an: ${(localState.xp || 0).toLocaleString('tr-TR')} XP, ${(localState.actionLogs || []).length} kayıt`;
+
+            const snaps = getSnapshots().slice().reverse();
+            const list = document.getElementById('vault-snapshots-list');
+            list.innerHTML = snaps.length ? snaps.map((sn, i) => `
+                <div class="flex items-center justify-between bg-[#050a08] border border-[#00ff9f]/10 rounded px-2 py-1.5 text-[10px]">
+                    <span class="text-gray-300 font-mono">${esc(sn.date.split('-').reverse().join('.'))} ${esc(sn.time || '')} <span class="text-gray-500">(${esc(sn.reason)})</span></span>
+                    <span class="text-[#00ff9f] font-mono">${(sn.xp || 0).toLocaleString('tr-TR')} XP · ${sn.logs || 0} kayıt</span>
+                    <button class="ml-2 px-2 py-0.5 border border-[#00ff9f]/40 rounded text-[#00ff9f] hover:bg-[#00ff9f]/20" onclick="window.restoreSnapshot(${snaps.length - 1 - i})">YÜKLE</button>
+                </div>`).join('') : `<div class="text-[10px] text-gray-600 font-mono">Henüz otomatik yedek yok. Her gün ilk kullanımda bir tane alınır.</div>`;
+        }
+
+        async function applyRestoredState(data, label) {
+            if (!data || typeof data !== 'object' || (data.xp === undefined && !data.actionLogs)) {
+                triggerAlert("Bu dosya geçerli bir PersonaXP yedeği değil.", 'error');
+                return;
+            }
+            if (!confirm(`${label} yüklensin mi?\n\nYedek: ${(data.xp || 0).toLocaleString('tr-TR')} XP, ${(data.actionLogs || []).length} kayıt\nŞu an: ${(localState.xp || 0).toLocaleString('tr-TR')} XP, ${(localState.actionLogs || []).length} kayıt\n\n(Şu anki hâlin de otomatik yedeklere eklenir.)`)) return;
+            saveSnapshot("geri yüklemeden önce", true);
+            localState = Object.assign({
+                directives: [], routines: [], actionLogs: [], dayNotes: {}, deadlines: [],
+                stats: { LRN: 0, HLT: 0, MNT: 0, FIN: 0, PRO: 0, SOC: 0 }, incomeEntries: []
+            }, data);
+            sanitizeData();
+            checkDailyResetsAndDecay();
+            checkMonthRollover();
+            await securePersistVault();
+            updateDashboardUI();
+            renderVault();
+            triggerAlert("Yedek başarıyla geri yüklendi! ✔");
+        }
+
+        window.restoreSnapshot = async (idx) => {
+            const sn = getSnapshots()[idx];
+            if (!sn) return;
+            try { await applyRestoredState(JSON.parse(sn.data), `${sn.date} tarihli otomatik yedek`); }
+            catch (e) { triggerAlert("Yedek okunamadı: " + e.message, 'error'); }
         };
+
+        document.getElementById('backup-btn').onclick = () => { renderVault(); vaultModal.classList.remove('hidden'); };
+        document.getElementById('close-vault-btn').onclick = () => vaultModal.classList.add('hidden');
+
+        document.getElementById('vault-download-btn').onclick = () => {
+            const blob = new Blob([JSON.stringify(localState, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `personaxp_yedek_${getTodayStr()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+            localState.lastManualBackup = getTodayStr();
+            securePersistVault();
+            triggerAlert("Yedek dosyası indirildi! iPhone'da 'Dosyalar' uygulamasına kaydedebilirsin.");
+        };
+
+        const vaultFileInput = document.getElementById('vault-file-input');
+        document.getElementById('vault-restore-btn').onclick = () => vaultFileInput.click();
+        vaultFileInput.onchange = async () => {
+            const file = vaultFileInput.files[0];
+            vaultFileInput.value = '';
+            if (!file) return;
+            try {
+                const data = JSON.parse(await file.text());
+                await applyRestoredState(data, `"${file.name}" dosyası`);
+            } catch (e) {
+                triggerAlert("Dosya okunamadı: " + e.message, 'error');
+            }
+        };
+
+        // iPhone'da ve giriş yapılmamışsa bir kez hatırlat
+        if (isIOS && !isStandalone) {
+            try {
+                if (!localStorage.getItem('personaxp_ios_tip_shown')) {
+                    localStorage.setItem('personaxp_ios_tip_shown', '1');
+                    setTimeout(() => triggerAlert("📱 İpucu: Verilerin silinmesin diye Google ile bağlan ve siteyi Ana Ekrana ekle. Detay: 💾 Kasa"), 3000);
+                }
+            } catch (e) {}
+        }
 
         const authBtn = document.getElementById('auth-btn');
         authBtn.onclick = async () => {
             if (currentUser) {
+                if (!confirm("Google hesabından çıkılsın mı? Veriler bu cihazda kalır.")) return;
                 await signOut(auth);
             } else {
                 try {
@@ -1841,12 +2274,15 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                cloudReadOk = false;
                 authBtn.innerText = "ÇIKIŞ";
                 document.getElementById('user-email-display').innerText = user.email;
                 if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
                 await syncCloudVault(user);
             } else {
                 currentUser = null;
+                cloudReadOk = false;
+                setSyncStatus('off');
                 authBtn.innerText = "GOOGLE İLE BAĞLAN";
                 document.getElementById('user-name').innerText = localState.customName || "MISAFIR_KULLANICI";
                 document.getElementById('user-email-display').innerText = "Giriş Bekleniyor";
