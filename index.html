@@ -1092,62 +1092,63 @@
         // [id, ad, ikon, ebeveyn, anahtar kelimeler]
         const DEFAULT_SKILLS = [
             ['lrn-dil', 'Dil', '🗣️', 'LRN', []],
-            ['rusca', 'Rusça', '🇷🇺', 'lrn-dil', ['rusça', 'rusca', 'russian', 'memrise']],
-            ['ingilizce', 'İngilizce', '🇬🇧', 'lrn-dil', ['ingilizce', 'english', 'İngilizce']],
-            ['japonca', 'Japonca', '🇯🇵', 'lrn-dil', ['japonca', 'japanese']],
+            ['rusca', 'Rusça', '🇷🇺', 'lrn-dil', ['rusça', 'rusca', 'russian', 'memrise', 'rus']],
+            ['ingilizce', 'İngilizce', '🇬🇧', 'lrn-dil', ['ingilizce', 'english', 'ielts', 'toefl', 'yds']],
+            ['japonca', 'Japonca', '🇯🇵', 'lrn-dil', ['japonca', 'japanese', 'kanji', 'hiragana', 'katakana', 'duolingo']],
             ['lrn-ai', 'Yapay Zeka', '🤖', 'LRN', []],
-            ['prompt', 'Prompt yazma', '💬', 'lrn-ai', ['prompt']],
+            ['prompt', 'Prompt yazma', '💬', 'lrn-ai', ['prompt', 'claude', 'chatgpt', 'gemini']],
             ['claude-code', 'Claude Code / vibecoding', '🧑‍💻', 'lrn-ai', ['claude code', 'vibecoding', 'vibe coding']],
             ['ai-gorsel', 'AI görsel & video', '🖼️', 'lrn-ai', ['midjourney', 'ai görsel', 'ai video', 'sora', 'runway']],
             ['otomasyon', 'Otomasyon (n8n, Zapier)', '🔁', 'lrn-ai', ['n8n', 'zapier', 'otomasyon']],
             ['lrn-tasarim', 'Tasarım', '🎨', 'LRN', []],
-            ['affinity', 'Affinity', '🖌️', 'lrn-tasarim', ['affinity']],
-            ['figma', 'Figma (UI/UX)', '📐', 'lrn-tasarim', ['figma', 'ui/ux', 'ux']],
-            ['tipografi', 'Tipografi & renk', '🔤', 'lrn-tasarim', ['tipografi', 'font', 'renk teorisi']],
-            ['logo', 'Logo & marka kimliği', '🏷️', 'lrn-tasarim', ['logo', 'marka kimliği', 'branding']],
+            ['affinity', 'Affinity', '🖌️', 'lrn-tasarim', ['affinity', 'photoshop', 'illustrator', 'canva']],
+            ['figma', 'Figma (UI/UX)', '📐', 'lrn-tasarim', ['figma', 'ui/ux', 'ux', 'arayüz', 'wireframe', 'mockup']],
+            ['tipografi', 'Tipografi & renk', '🔤', 'lrn-tasarim', ['tipografi', 'font', 'renk teorisi', 'renk paleti', 'palet']],
+            ['logo', 'Logo & marka kimliği', '🏷️', 'lrn-tasarim', ['logo', 'marka kimliği', 'branding', 'afiş', 'poster']],
             ['lrn-video', 'Video & Hareket', '🎬', 'LRN', []],
-            ['davinci', 'DaVinci Resolve', '🎞️', 'lrn-video', ['davinci', 'resolve', 'kurgu']],
+            ['davinci', 'DaVinci Resolve', '🎞️', 'lrn-video', ['davinci', 'resolve', 'kurgu', 'video düzenle', 'montaj', 'premiere', 'capcut']],
             ['color', 'Renk düzenleme', '🌈', 'lrn-video', ['color grading', 'renk düzenleme']],
-            ['cavalry', 'Cavalry (animasyon)', '🐎', 'lrn-video', ['cavalry', 'animasyon']],
-            ['blender', '3D (Blender)', '🧊', 'lrn-video', ['blender', '3d']],
+            ['cavalry', 'Cavalry (animasyon)', '🐎', 'lrn-video', ['cavalry', 'animasyon', 'motion', 'after effects']],
+            ['blender', '3D (Blender)', '🧊', 'lrn-video', ['blender', '3d', '3 boyut']],
             ['lrn-yazilim', 'Yazılım', '💻', 'LRN', []],
-            ['web', 'HTML / CSS / JS', '🌐', 'lrn-yazilim', ['html', 'css', 'javascript']],
-            ['mobil', 'Mobil uygulama (Expo)', '📱', 'lrn-yazilim', ['expo', 'react native', 'mobil uygulama', 'guidto']],
-            ['git', 'Git & GitHub', '🐙', 'lrn-yazilim', ['github', 'git ']],
+            ['web', 'HTML / CSS / JS', '🌐', 'lrn-yazilim', ['html', 'css', 'javascript', 'site', 'web', 'kod', 'tailwind']],
+            ['mobil', 'Mobil uygulama (Expo)', '📱', 'lrn-yazilim', ['expo', 'react native', 'mobil uygulama', 'guidto', 'uygulama', 'oyun geliştir', 'böcek oyunu']],
+            ['git', 'Git & GitHub', '🐙', 'lrn-yazilim', ['github', 'commit']],
             ['db', 'Veritabanı (Firebase)', '🗄️', 'lrn-yazilim', ['firebase', 'veritabanı', 'sql']],
+            ['okul', 'Okul (AÖF)', '🎓', 'LRN', ['aöf', 'vize', 'final', 'sınav', 'ders', 'ödev', 'okul', 'ünite', 'medya ve iletişim', 'deneme']],
             ['lrn-pazarlama', 'Pazarlama', '📈', 'LRN', []],
-            ['seo', 'SEO', '🔎', 'lrn-pazarlama', ['seo']],
-            ['aeo', 'AEO (AI aramaları)', '🧭', 'lrn-pazarlama', ['aeo', 'geo']],
-            ['hubspot', 'Sosyal medya (HubSpot)', '📣', 'lrn-pazarlama', ['hubspot', 'sosyal medya kursu']],
-            ['icerik', 'İçerik & metin yazarlığı', '✍️', 'lrn-pazarlama', ['metin yazarlığı', 'copywriting', 'içerik']],
+            ['seo', 'SEO', '🔎', 'lrn-pazarlama', ['seo', 'anahtar kelime']],
+            ['aeo', 'AEO (AI aramaları)', '🧭', 'lrn-pazarlama', ['aeo']],
+            ['hubspot', 'Sosyal medya (HubSpot)', '📣', 'lrn-pazarlama', ['hubspot', 'sosyal medya kursu', 'pazarlama', 'reklam']],
+            ['icerik', 'İçerik & metin yazarlığı', '✍️', 'lrn-pazarlama', ['metin yazarlığı', 'copywriting', 'içerik', 'blog', 'makale', 'senaryo']],
             ['eticaret', 'E-ticaret', '🛒', 'lrn-pazarlama', ['e-ticaret', 'eticaret']],
 
-            ['odak', 'Odak (pomodoro)', '⏱️', 'PRO', ['odaklanma', 'pomodoro', 'odak']],
-            ['planlama', 'Planlama & takvim', '🗓️', 'PRO', ['planlama', 'sabah ritüeli', 'akşam kapanışı']],
+            ['odak', 'Odak (pomodoro)', '⏱️', 'PRO', ['odaklanma', 'pomodoro', 'odak', 'derin çalışma']],
+            ['planlama', 'Planlama & takvim', '🗓️', 'PRO', ['planlama', 'sabah ritüeli', 'akşam kapanışı', 'plan', 'takvim', 'to-do', 'yapılacak']],
             ['obsidian', 'İkinci beyin (Obsidian)', '🗃️', 'PRO', ['obsidian', 'ikinci beyin', 'avenox']],
-            ['proje', 'Proje bitirme', '🏁', 'PRO', ['proje', 'teslim']],
+            ['proje', 'Proje bitirme', '🏁', 'PRO', ['proje', 'teslim', 'bitir', 'tamamla']],
 
-            ['calisthenics', 'Calisthenics', '🤸', 'HLT', ['calisthenics', 'kalistenik', 'barfiks', 'şınav', 'sinav', 'dips']],
+            ['calisthenics', 'Calisthenics', '🤸', 'HLT', ['calisthenics', 'kalistenik', 'barfiks', 'şınav', 'dips', 'mekik', 'plank', 'squat', 'amuda']],
             ['gures', 'Güreş / dövüş', '🤼', 'HLT', ['güreş', 'gures', 'dövüş', 'boks', 'mma']],
-            ['kuvvet', 'Kuvvet & esneme', '🏋️', 'HLT', ['esnetme', 'esneme', 'stretch', 'antrenman', 'spor salonu', 'gym']],
-            ['beslenme', 'Beslenme & su', '🥗', 'HLT', ['bardak su', 'öğün', 'beslenme']],
-            ['uyku', 'Uyku', '😴', 'HLT', ['uyku', 'erken yat']],
+            ['kuvvet', 'Kuvvet & esneme', '🏋️', 'HLT', ['esnetme', 'esneme', 'stretch', 'antrenman', 'spor', 'gym', 'ağırlık', 'idman', 'koşu', 'koş', 'yürüyüş', 'yürü', 'bisiklet', 'yüzme', 'adım', 'kardiyo']],
+            ['beslenme', 'Beslenme & su', '🥗', 'HLT', ['bardak su', 'su iç', 'öğün', 'beslenme', 'kahvaltı', 'yemek', 'şekersiz', 'sebze', 'protein', 'vitamin']],
+            ['uyku', 'Uyku', '😴', 'HLT', ['uyku', 'erken yat', 'uyu', 'erken kalk', 'şekerleme']],
 
-            ['nefes', 'Nefes (Wim Hof)', '🫁', 'MNT', ['wim hof', 'win hof', 'nefes']],
-            ['meditasyon', 'Meditasyon', '🧘', 'MNT', ['meditasyon']],
-            ['kitap', 'Kitap okuma', '📖', 'MNT', ['kitap', 'sayfa oku', 'okuma']],
-            ['gunluk', 'Günlük yazma', '📓', 'MNT', ['günlük', 'tek cümle']],
-            ['disiplin', 'Disiplin', '🛡️', 'MNT', ['disiplin']],
+            ['nefes', 'Nefes (Wim Hof)', '🫁', 'MNT', ['wim hof', 'win hof', 'nefes', 'soğuk duş']],
+            ['meditasyon', 'Meditasyon', '🧘', 'MNT', ['meditasyon', 'mindfulness', 'farkındalık']],
+            ['kitap', 'Kitap okuma', '📖', 'MNT', ['kitap', 'sayfa', 'okuma', 'oku', 'roman']],
+            ['gunluk', 'Günlük yazma', '📓', 'MNT', ['günlük', 'tek cümle', 'journal', 'şükür']],
+            ['disiplin', 'Disiplin', '🛡️', 'MNT', ['disiplin', 'telefonsuz', 'sosyal medya detoks', 'detoks']],
 
-            ['satis', 'Axl8 & Etsy satışları', '🏎️', 'FIN', ['axl8', 'etsy', 'dolap', 'satış', 'hotwheels']],
-            ['app-gelir', 'Uygulama geliri', '📲', 'FIN', ['uygulama geliri', 'app store']],
-            ['borsa', 'Borsa & yatırım', '📊', 'FIN', ['borsa', 'yatırım', 'hisse']],
-            ['butce', 'Bütçe & birikim', '🐷', 'FIN', ['bütçe', 'birikim']],
+            ['satis', 'Axl8 & Etsy satışları', '🏎️', 'FIN', ['axl8', 'etsy', 'dolap', 'satış', 'sat', 'hotwheels', 'ürün', 'sipariş', 'kargo', 'listeleme']],
+            ['app-gelir', 'Uygulama geliri', '📲', 'FIN', ['uygulama geliri', 'app store', 'abonelik', 'reklam geliri']],
+            ['borsa', 'Borsa & yatırım', '📊', 'FIN', ['borsa', 'yatırım', 'hisse', 'fon', 'altın', 'kripto', 'bitcoin', 'döviz']],
+            ['butce', 'Bütçe & birikim', '🐷', 'FIN', ['bütçe', 'birikim', 'harcama', 'tasarruf', 'fatura', 'kira', 'para biriktir']],
 
-            ['iletisim', 'İletişim & hitabet', '🎤', 'SOC', ['hitabet', 'sunum', 'iletişim']],
-            ['network', 'Network', '🕸️', 'SOC', ['network', 'networking']],
-            ['aile', 'Aile & arkadaşlar', '👨‍👩‍👦', 'SOC', ['aile', 'arkadaş']],
-            ['sosyal-medya', 'Sosyal medya varlığı', '📸', 'SOC', ['instagram', 'pinterest', 'paylaşım', 'post']]
+            ['iletisim', 'İletişim & hitabet', '🎤', 'SOC', ['hitabet', 'sunum', 'iletişim', 'konuşma', 'diksiyon']],
+            ['network', 'Network', '🕸️', 'SOC', ['network', 'networking', 'linkedin', 'mentor', 'tanış']],
+            ['aile', 'Aile & arkadaşlar', '👨‍👩‍👦', 'SOC', ['aile', 'arkadaş', 'anne', 'baba', 'kardeş', 'dede', 'nine', 'babaanne', 'anneanne', 'kuzen', 'ara', 'buluş', 'ziyaret']],
+            ['sosyal-medya', 'Sosyal medya varlığı', '📸', 'SOC', ['instagram', 'pinterest', 'paylaşım', 'paylaş', 'tiktok', 'reels', 'youtube', 'x', 'twitter', 'tweet', 'story', 'hikaye']]
         ];
         // [kaynak, hedef, yüzde]
         const DEFAULT_LINKS = [
@@ -1183,23 +1184,67 @@
         }
         function trLower(s) { return String(s || '').toLocaleLowerCase('tr-TR'); }
 
+        // Kelime başından eşleşme: kısa anahtarlar (≤3 harf) tam kelime olmalı (örn. "x", "seo"),
+        // uzunlar Türkçe ekleri kapsasın diye kelime başından ("kitabı" hariç: "kitap" → "kitaplar" olur)
+        const TR_WORD = 'a-zçğıöşüâîû0-9';
+        function kwHit(t, kk) {
+            const esc = kk.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+            const tail = kk.length <= 3 ? `(?![${TR_WORD}])` : '';
+            return new RegExp(`(^|[^${TR_WORD}])${esc}${tail}`, 'u').test(t);
+        }
         function guessSkill(text, cat) {
-            const t = ' ' + trLower(text) + ' ';
+            const t = trLower(text);
+            if (!t.trim()) return null;
             let best = null, bestScore = 0;
             for (const id of leafIds()) {
                 const n = tree().nodes[id];
-                for (const k of (n.kw || [])) {
-                    const kk = trLower(k);
-                    if (kk && t.includes(kk)) {
-                        const score = kk.length + (rootOf(id) === cat ? 3 : 0);
+                const keys = [...(n.kw || []).map(trLower)];
+                const nm = trLower(n.name); if (nm.length > 3) keys.push(nm);
+                for (const kk of keys) {
+                    if (kk && kwHit(t, kk)) {
+                        const score = kk.length + 1 + (rootOf(id) === cat ? 3 : 0);
                         if (score > bestScore) { best = id; bestScore = score; }
                     }
                 }
-                // yetenek adının kendisi de anahtar kelime sayılır
-                const nm = trLower(n.name);
-                if (nm.length > 3 && t.includes(nm) && nm.length + 1 > bestScore) { best = id; bestScore = nm.length + 1; }
             }
-            return best;
+            if (best) return best;
+            // Anahtar yoksa: aynı ifadeyle daha önce elle seçilmiş yeteneği kullan
+            const words = t.split(/[^a-zçğıöşüâîû0-9]+/u).filter(w => w.length > 3);
+            if (!words.length) return null;
+            const past = [...(localState.routines || []), ...(localState.directives || []), ...(localState.actionLogs || [])].reverse();
+            for (const p of past) {
+                if (!p.skillId || !tree().nodes[p.skillId]) continue;
+                const pt = trLower(p.text);
+                if (words.some(w => pt.includes(w))) return p.skillId;
+            }
+            return null;
+        }
+
+        // Varsayılan anahtar kelimeleri mevcut ağaca işle (kullanıcının eklediklerine dokunmaz)
+        const SKILL_KW_VERSION = 2;
+        function upgradeSkillKeywords() {
+            const tr = localState.skillTree; if (!tr?.nodes) return;
+            if ((tr.kwVersion || 1) >= SKILL_KW_VERSION) return;
+            const BAD = new Set(['git ', 'geo', 'sinav']);
+            for (const [id, name, icon, parent, kw] of DEFAULT_SKILLS) {
+                let n = tr.nodes[id];
+                if (!n) {
+                    if (!tr.nodes[parent]) continue;
+                    n = tr.nodes[id] = { id, name, icon, parent, kw: [], xp: 0, passiveXp: 0, links: [] };
+                }
+                const cur = (n.kw || []).filter(k => !BAD.has(k));
+                n.kw = [...new Set([...cur, ...kw])];
+            }
+            tr.kwVersion = SKILL_KW_VERSION;
+        }
+        function previewSkillGuess() {
+            const sel = document.getElementById('manual-skill'); if (!sel || !sel.options.length) return;
+            const opt = sel.options[0]; if (opt.value !== '') return;
+            const text = document.getElementById('manual-text')?.value || '';
+            const cat = document.getElementById('manual-cat')?.value;
+            if (!text.trim()) { opt.textContent = '🌳 Yetenek: otomatik tahmin'; return; }
+            const id = guessSkill(text, cat), n = id && tree().nodes[id];
+            opt.textContent = n ? `🌳 Otomatik: ${n.icon} ${n.name}` : '🌳 Otomatik: eşleşme yok (elle seç)';
         }
 
         // Bir yaprağa XP ver; pasif bağlantılarına (tek adım) oranında katkı geçer
@@ -1263,6 +1308,7 @@
                 const el = document.getElementById(id);
                 if (el) { const v = el.value; el.innerHTML = skillOptionsHtml(v); el.value = v; }
             }
+            previewSkillGuess();
         }
 
         // ---- Yetenek seçici pencere ----
@@ -1739,6 +1785,7 @@
             if (!localState.streak) localState.streak = { current: 0, lastActiveDate: "", dailyCompleted: false, shields: 1 };
             migrateIncomeLedger();
             initSkillTree();
+            upgradeSkillKeywords();
         }
 
         function loadLocalVault() {
@@ -3407,6 +3454,8 @@ Kurallar:
         document.getElementById('fab-add').onclick = openAddSheet;
         document.getElementById('add-sheet-bg').onclick = closeAddSheet;
         document.querySelectorAll('.sheet-tab').forEach(b => b.onclick = () => setSheetTab(b.dataset.sheet));
+        document.getElementById('manual-text')?.addEventListener('input', previewSkillGuess);
+        document.getElementById('manual-cat')?.addEventListener('change', previewSkillGuess);
         document.getElementById('manual-add-btn')?.addEventListener('click', () => { if (!document.getElementById('add-sheet').classList.contains('hidden')) setTimeout(() => { if (!document.getElementById('manual-text').value) closeAddSheet(); }, 150); });
         document.getElementById('sheet-income-add').onclick = () => {
             document.getElementById('quick-income-source').value = document.getElementById('sheet-income-source').value;
