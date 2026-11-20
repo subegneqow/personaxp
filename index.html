@@ -2961,16 +2961,19 @@ Kurallar:
             renderCoach();
             try {
                 await initCoach();
-                let lastErr = null;
+                let lastErr = null, currentAttempt = -1;
                 for (let attempt = 0; attempt < COACH_MODELS.length; attempt++) {
                     try {
+                        currentAttempt = attempt;
                         startCoachChat();
                         // 30 sn içinde ilk kelime gelmezse daha hızlı modele geç
                         let firstChunk = false;
                         const timeout = new Promise((_, rej) => setTimeout(() => { if (!firstChunk) rej(new Error('COACH_TIMEOUT')); }, 30000));
+                        const myAttempt = attempt;
                         const run = (async () => {
                             const res = await coachChat.sendMessageStream(text);
                             for await (const chunk of res.stream) {
+                                if (myAttempt !== currentAttempt) return; // zaman aşımına uğramış eski deneme
                                 firstChunk = true;
                                 reply.text += chunk.text();
                                 renderCoach();
