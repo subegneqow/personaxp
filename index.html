@@ -3241,6 +3241,8 @@
         const COACH_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
         const COACH_CHAT_KEY = "personaxp_coach_chat_v1";
         let coachAI = null, coachChat = null, coachModelIdx = 0, coachBusy = false;
+        // Son çalışan modeli 1 gün hatırla (her seferinde yavaş/çalışmayan modeli tekrar denemesin)
+        try { const m = JSON.parse(localStorage.getItem('personaxp_coach_model') || 'null'); if (m && Date.now() - m.t < 864e5 && m.i < COACH_MODELS.length) coachModelIdx = m.i; } catch (e) {}
         let coachMessages = (() => { try { return JSON.parse(localStorage.getItem(COACH_CHAT_KEY) || "[]"); } catch (e) { return []; } })();
 
         function saveCoachMessages() {
@@ -3309,6 +3311,8 @@ Kurallar:
             const { mod, ai } = coachAI;
             const model = mod.getGenerativeModel(ai, {
                 model: COACH_MODELS[coachModelIdx],
+                // Hız: uzun "düşünme" kapalı. Gemini 3 → düşük düşünme seviyesi, 2.5 → düşünme bütçesi 0
+                generationConfig: { maxOutputTokens: 900, thinkingConfig: /^gemini-3/.test(COACH_MODELS[coachModelIdx]) ? { thinkingLevel: 'LOW' } : { thinkingBudget: 0 } },
                 systemInstruction: COACH_SYSTEM + "\n\nKULLANICI VERİSİ (güncel):\n" + buildCoachContext()
             });
             // Geçmiş: sadece başarılı "kullanıcı → koç" çiftleri (şu an gönderilen mesaj ve boş cevap hariç)
@@ -3374,9 +3378,9 @@ Kurallar:
                     try {
                         currentAttempt = attempt;
                         startCoachChat();
-                        // 30 sn içinde ilk kelime gelmezse daha hızlı modele geç
+                        // 12 sn içinde ilk kelime gelmezse daha hızlı modele geç
                         let firstChunk = false;
-                        const timeout = new Promise((_, rej) => setTimeout(() => { if (!firstChunk) rej(new Error('COACH_TIMEOUT')); }, 30000));
+                        const timeout = new Promise((_, rej) => setTimeout(() => { if (!firstChunk) rej(new Error('COACH_TIMEOUT')); }, 12000));
                         const myAttempt = attempt;
                         const run = (async () => {
                             const res = await coachChat.sendMessageStream(text);
@@ -3390,11 +3394,12 @@ Kurallar:
                         await Promise.race([run, timeout]);
                         await run;
                         lastErr = null;
+                        try { localStorage.setItem('personaxp_coach_model', JSON.stringify({ i: coachModelIdx, t: Date.now() })); } catch (e) {}
                         break;
                     } catch (e) {
                         lastErr = e;
                         // model bulunamadıysa sıradaki modeli dene
-                        if (/COACH_TIMEOUT|404|not.?found|not supported|is not available/i.test(String(e?.message || e)) && coachModelIdx < COACH_MODELS.length - 1) { coachModelIdx++; reply.text = ''; reply.status = 'Daha hızlı modele geçiliyor…'; renderCoach(); continue; }
+                        if (/COACH_TIMEOUT|404|400|invalid|not.?found|not supported|is not available/i.test(String(e?.message || e)) && coachModelIdx < COACH_MODELS.length - 1) { coachModelIdx++; reply.text = ''; reply.status = 'Daha hızlı modele geçiliyor…'; renderCoach(); continue; }
                         break;
                     }
                 }
