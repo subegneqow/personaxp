@@ -178,7 +178,7 @@
             <div id="m-greet-text" class="text-[28px] font-extrabold text-white leading-tight" style="letter-spacing:-0.02em">Merhaba</div>
         </div>
         <div class="flex items-center space-x-2">
-            <button id="checkin-btn" class="text-xs border border-amber-500/50 bg-amber-950/30 px-3 py-1.5 hover:bg-amber-900/50 text-amber-300 rounded font-bold transition-all flex items-center space-x-1 glow-gold cursor-pointer">
+            <button id="checkin-btn" style="display:none" class="text-xs border border-amber-500/50 bg-amber-950/30 px-3 py-1.5 hover:bg-amber-900/50 text-amber-300 rounded font-bold transition-all flex items-center space-x-1 glow-gold cursor-pointer">
                 <span>⚡</span>
                 <span class="hidden sm:inline">30SN RİTÜEL</span>
             </button>
@@ -267,7 +267,6 @@
                 <button onclick="document.getElementById('debrief-btn').click()" class="ps-row">📊 <span>Haftalık karne</span><b>›</b></button>
                 <button onclick="window.openMonthlyReport()" class="ps-row">📅 <span>Aylık karne</span><b>›</b></button>
                 <button onclick="document.getElementById('reminder-btn').click()" class="ps-row">🔔 <span>Hatırlatmalar</span><b>›</b></button>
-                <button onclick="document.getElementById('checkin-btn').click()" class="ps-row">⚡ <span>30 sn ritüel</span><b>›</b></button>
                 <button onclick="document.getElementById('backup-btn').click()" class="ps-row">💾 <span>Veri kasası (yedek)</span><b>›</b></button>
                 <button onclick="document.getElementById('auth-btn').click()" class="ps-row">👤 <span id="ps-auth-label">Hesap</span><b>›</b></button>
             </div>
