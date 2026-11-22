@@ -102,12 +102,14 @@
             body[data-tab="home"] main { display: flex !important; flex-direction: column; }
             body[data-tab="home"] #left-col, body[data-tab="home"] #right-col, body[data-tab="home"] #section-tasks, body[data-tab="home"] #normal-tasks-container { display: contents; }
             body[data-tab="home"] #profile-card { order: 1; }
-            body[data-tab="home"] #streak-card { order: 2; }
-            body[data-tab="home"] #routines-card { order: 3; }
-            body[data-tab="home"] #tasks-card { order: 4; }
-            body[data-tab="home"] #energy-card, body[data-tab="home"] #low-battery-panel { order: 5; }
-            body[data-tab="home"] #deadline-card { order: 6; }
+            body[data-tab="home"] #deadline-card { order: 2; }
+            body[data-tab="home"] #streak-card { order: 3; }
+            body[data-tab="home"] #low-battery-panel { order: 4; }
+            body[data-tab="home"] #routines-card { order: 5; }
+            body[data-tab="home"] #tasks-card { order: 6; }
         }
+        #energy-card { display: none !important; } /* enerji modu kartı kaldırıldı: mini görevler seri kartından açılıyor */
+        .chips > * { white-space: nowrap; }
         .ps-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 52px; font-size: 15px; color: #f2f4f5; text-align: left; border-bottom: 1px solid #22292d; }
         .ps-row:last-child { border-bottom: 0; }
         .ps-row span { flex: 1; }
@@ -315,16 +317,16 @@
                     </div>
                 </div>
                 
-                <div id="deadline-list" class="space-y-2 mb-4 max-h-40 overflow-y-auto pr-1"></div>
+                <div id="deadline-list" class="space-y-2 mb-2 max-h-40 overflow-y-auto pr-1"></div>
                 
-                <div class="pt-3 border-t border-red-500/10 flex flex-col space-y-2">
-                    <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">YENİ DEADLINE EKLE:</span>
-                    <div class="flex gap-2">
+                <details class="pt-2 border-t border-red-500/10">
+                    <summary class="text-[11px] text-red-300 font-bold cursor-pointer py-1">＋ Yeni hedef ekle</summary>
+                    <div class="flex gap-2 mt-2">
                         <input type="text" id="deadline-title-input" placeholder="Hedef adı (Örn: Sınav, Teslimat)..." class="flex-1 bg-[#050a08] border border-red-500/20 text-white rounded p-1.5 text-xs focus:ring-red-400">
                         <input type="date" id="deadline-date-input" class="w-28 bg-[#050a08] border border-red-500/20 text-red-300 rounded p-1.5 text-xs font-mono focus:ring-red-400">
                         <button id="add-deadline-btn" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase rounded transition-all">EKLE</button>
                     </div>
-                </div>
+                </details>
             </div>
 
             <div id="bio-counter-card" class="bg-[#07110e] border border-cyan-500/30 rounded p-4 space-y-3 relative overflow-hidden">
@@ -423,6 +425,7 @@
                     <h3 class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Son 30 gün</h3>
                     <div id="activity-heatmap-grid" class="grid grid-cols-10 gap-1.5 p-1.5 bg-[#050a08] rounded border border-[#00ff9f]/10"></div>
                 </div>
+                <button onclick="document.getElementById('toggle-low-battery-btn').click(); document.getElementById('low-battery-panel').scrollIntoView({behavior:'smooth', block:'center'})" class="w-full text-left text-[12px] text-amber-300/90 border border-amber-500/20 rounded-lg px-3 py-2">🪫 Zor bir gün mü? 1 dakikalık mini görevle seriyi koru ›</button>
             </div>
 
             <div id="radar-card" class="bg-[#07110e] border border-[#00ff9f]/20 rounded p-5 flex flex-col items-center relative min-h-[300px] justify-center">
@@ -2482,7 +2485,7 @@
             const tm = new Date(); tm.setDate(tm.getDate() + 1);
             const tmr = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, '0')}-${String(tm.getDate()).padStart(2, '0')}`;
             if (d.penalized || d.due < t) return `<span class="px-1.5 rounded bg-red-500/20 text-red-300 font-bold">⛔ GECİKTİ −${2 * d.xp}</span>`;
-            if (d.due === t) return `<span class="px-1.5 rounded bg-amber-500/15 text-amber-300 font-bold">⏳ Bugün · risk −${2 * d.xp}</span>`;
+            if (d.due === t) return `<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold">⏳ Bugün · −${2 * d.xp} risk</span>`;
             if (d.due === tmr) return `<span class="px-1.5 rounded border border-white/10 text-gray-300">⏳ Yarın</span>`;
             return `<span class="px-1.5 rounded border border-white/10 text-gray-300">⏳ ${d.due.split('-').reverse().slice(0, 2).join('.')}</span>`;
         }
@@ -2500,20 +2503,18 @@
 
             count.innerText = `${localState.directives.length} AKTİF`;
             list.innerHTML = localState.directives.map(d => `
-                <div class="bg-[#0a1814] border border-[#00ff9f]/10 p-3 rounded flex items-center justify-between hover:border-[#00ff9f]/30 transition-all group">
-                    <div>
-                        <div class="text-xs font-bold text-white">${esc(d.text)}</div>
-                        <div class="flex items-center space-x-2 text-[9px] text-[#00ff9f]/80 mt-1">
-                            <span class="px-1 border border-[#00ff9f]/30 rounded">${d.cat}</span>
-                            ${d.subcat ? `<span class="px-1 border border-blue-400/30 text-blue-400 rounded">${d.subcat}</span>` : ''}
-                            <span>+${d.xp} XP</span>
+                <div class="bg-[#0a1814] border ${d.penalized ? 'border-red-500/30' : 'border-[#00ff9f]/10'} p-3 rounded flex items-start gap-3 group">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[14px] font-semibold text-white leading-snug">${esc(d.text)}</div>
+                        <div class="chips flex flex-wrap items-center gap-1.5 mt-2 text-[11px] text-gray-400">
+                            <span>${d.cat}${d.subcat && d.subcat !== d.cat ? '/' + d.subcat : ''} · <span class="text-[#00ff9f]">+${d.xp} XP</span></span>
                             ${dueChip(d)}
                             ${skillTagHtml(d, 'task')}
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button class="text-gray-600 hover:text-red-500 px-2 transition-colors opacity-0 group-hover:opacity-100" onclick="window.deleteTask('${d.id}')" title="Sil">✕</button>
-                        <button class="px-3 py-1 bg-[#00ff9f] text-black font-bold text-[10px] rounded hover:bg-white" onclick="window.completeTask('${d.id}')">TAMAMLA</button>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button class="w-8 h-8 text-gray-600 hover:text-red-400 rounded-full" onclick="window.deleteTask('${d.id}')" title="Sil" aria-label="Sil">✕</button>
+                        <button class="w-10 h-10 rounded-full bg-[#00ff9f] text-black font-extrabold text-lg hover:bg-white" onclick="window.completeTask('${d.id}')" title="Tamamla" aria-label="Tamamla">✓</button>
                     </div>
                 </div>
             `).join('');
