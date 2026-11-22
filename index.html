@@ -11,8 +11,8 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" href="icon-192.png">
-    <title>PERSONAXP // TELEMETRY TERMINAL</title>
-    <link rel="stylesheet" href="tw.css?v=2164189f">
+    <title>PersonaXP</title>
+    <link rel="stylesheet" href="tw.css?v=b09fcdfb">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -162,6 +162,11 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 159, 0.5); }
             /* Açılır pencereler iPhone saat/çentik alanının altında başlasın */
         [id$="-modal"].fixed.inset-0 { padding-top: calc(env(safe-area-inset-top) + 12px) !important; padding-bottom: calc(env(safe-area-inset-bottom) + 12px) !important; }
+            /* Sade görünüm: eski terminal kalıntıları (daktilo yazı, büyük harf, parıltı) */
+        .font-mono { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif !important; font-variant-numeric: tabular-nums; }
+        .uppercase { text-transform: none !important; }
+        .tracking-wider, .tracking-widest, .tracking-wide { letter-spacing: 0 !important; }
+        .glow-green, .glow-red, .glow-gold { text-shadow: none !important; }
     </style>
 </head>
 <body class="antialiased relative min-h-screen pb-12 select-none" data-tab="tasks">
@@ -185,23 +190,23 @@
         <div class="flex items-center space-x-2">
             <button id="checkin-btn" style="display:none" class="text-xs border border-amber-500/50 bg-amber-950/30 px-3 py-1.5 hover:bg-amber-900/50 text-amber-300 rounded font-bold transition-all flex items-center space-x-1 glow-gold cursor-pointer">
                 <span>⚡</span>
-                <span class="hidden sm:inline">30SN RİTÜEL</span>
+                <span class="hidden sm:inline">30 sn ritüel</span>
             </button>
             <button id="debrief-btn" class="text-xs border border-purple-500/40 bg-purple-950/30 px-3 py-1.5 hover:bg-purple-900/50 text-purple-300 rounded font-bold transition-all flex items-center space-x-1 cursor-pointer">
                 <span>📊</span>
-                <span class="hidden sm:inline">KARNE</span>
+                <span class="hidden sm:inline">Karne</span>
             </button>
             <button id="reminder-btn" class="text-xs border border-amber-400/40 px-3 py-1.5 hover:bg-amber-500/20 text-amber-300 rounded font-bold transition-all flex items-center space-x-1" title="Hatırlatmalar">
                 <span>🔔</span>
-                <span class="hidden sm:inline">HATIRLAT</span>
+                <span class="hidden sm:inline">Hatırlat</span>
             </button>
             <button id="backup-btn" class="text-xs border border-[#00ff9f]/30 px-3 py-1.5 hover:bg-[#00ff9f]/20 text-[#00ff9f] rounded font-bold transition-all flex items-center space-x-1" title="Veri Kasası: Yedek indir / geri yükle">
                 <span>💾</span>
-                <span class="hidden sm:inline">KASA</span>
+                <span class="hidden sm:inline">Kasa</span>
             </button>
             <div id="auth-section">
                 <button id="auth-btn" class="text-[#00ff9f] border border-[#00ff9f]/30 px-3 py-1.5 text-xs uppercase hover:bg-[#00ff9f] hover:text-black transition-all duration-300 rounded font-bold">
-                    GOOGLE İLE BAĞLAN
+                    Google ile bağlan
                 </button>
             </div>
         </div>
@@ -211,14 +216,13 @@
         <div class="bg-[#07110e] border border-emerald-500/30 rounded p-4 relative overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col md:flex-row items-stretch justify-between gap-4">
             <div class="space-y-1 flex-1 flex flex-col justify-between">
                 <div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-base">💰</span>
-                            <h3 class="text-xs text-emerald-400 font-bold uppercase tracking-wider">Aylık gelir <span id="income-month-label" class="text-emerald-300/70"></span></h3>
-                            <button id="income-history-toggle" class="text-[9px] border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded hover:bg-emerald-500/20">📜 KAYITLAR</button>
-                            <button onclick="window.openMonthlyReport()" class="text-[9px] border border-purple-400/40 text-purple-300 px-1.5 py-0.5 rounded hover:bg-purple-500/20">📅 AYLIK KARNE</button>
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                            <h3 class="w-full text-xs text-emerald-400 font-bold whitespace-nowrap">💰 Aylık gelir <span id="income-month-label" class="text-emerald-300/70 font-semibold"></span></h3>
+                            <button id="income-history-toggle" class="text-[9px] border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded hover:bg-emerald-500/20">📜 Kayıtlar</button>
+                            <button onclick="window.openMonthlyReport()" class="text-[9px] border border-purple-400/40 text-purple-300 px-1.5 py-0.5 rounded hover:bg-purple-500/20">📅 Aylık karne</button>
                         </div>
-                        <button id="edit-monthly-goal-btn" class="text-[10px] text-gray-400 hover:text-emerald-300 transition-colors flex items-center space-x-1 cursor-pointer" title="Aylık Hedefi Değiştir">
+                        <button id="edit-monthly-goal-btn" class="shrink-0 whitespace-nowrap text-[10px] text-gray-400 hover:text-emerald-300 transition-colors flex items-center gap-1 cursor-pointer" title="Aylık hedefi değiştir">
                             <span>Hedef:</span>
                             <span id="monthly-target-display" class="font-mono text-emerald-400 font-bold">10.000 ₺</span>
                             <span>✏️</span>
@@ -228,37 +232,37 @@
                         <div id="monthly-income-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full shadow-[0_0_8px_#10b981] transition-all duration-500" style="width: 0%"></div>
                     </div>
                     <div class="flex justify-between text-[9px] text-gray-400 font-mono mt-1">
-                        <span>Bu Ay Biriken: <strong id="monthly-earned-display" class="text-emerald-300">0 ₺</strong></span>
+                        <span>Bu ay: <strong id="monthly-earned-display" class="text-emerald-300">0 ₺</strong></span>
                         <span id="monthly-pct-display" class="text-emerald-400 font-bold">%0</span>
                         <span>Kalan: <strong id="monthly-remaining-display" class="text-white">10.000 ₺</strong></span>
                     </div>
                 </div>
                 
                 <div id="income-quick-row" class="mt-3 pt-3 border-t border-emerald-500/20 flex items-center justify-between gap-2">
-                    <span class="text-[9px] text-emerald-400 font-bold uppercase hidden sm:block">HIZLI CİRO EKLE:</span>
+                    <span class="text-[9px] text-emerald-400 font-bold uppercase hidden sm:block">Hızlı gelir ekle:</span>
                     <input type="text" id="quick-income-source" placeholder="Satış Kaynağı (Örn: Dolap - Hotwheels)" class="flex-1 bg-[#050a08] border border-emerald-500/20 text-white rounded p-1 text-[10px] focus:ring-emerald-400 h-7">
                     <input type="number" id="quick-income-amount" placeholder="₺ Miktar" class="w-20 bg-[#050a08] border border-emerald-500/20 text-emerald-300 rounded p-1 text-[10px] font-mono focus:ring-emerald-400 h-7 text-center">
-                    <button id="quick-income-add-btn" class="px-3 h-7 bg-emerald-500 hover:bg-white text-black font-bold text-[10px] uppercase rounded transition-all">EKLE</button>
+                    <button id="quick-income-add-btn" class="px-3 h-7 bg-emerald-500 hover:bg-white text-black font-bold text-[10px] uppercase rounded transition-all">Ekle</button>
                 </div>
 
                 <div id="income-history-panel" class="hidden mt-3 pt-3 border-t border-emerald-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">BU AYIN KAYITLARI</span>
+                        <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">Bu ayın kayıtları</span>
                         <div id="income-entries-list" class="space-y-1 max-h-40 overflow-y-auto pr-1"></div>
                     </div>
                     <div>
-                        <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">GEÇMİŞ AYLAR (ARŞİV)</span>
+                        <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">Geçmiş aylar (arşiv)</span>
                         <div id="income-archive-list" class="space-y-1 max-h-40 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
             </div>
             <div class="bg-[#0a1814] border border-emerald-500/20 p-2.5 rounded flex items-center justify-center space-x-3 shrink-0 h-full self-stretch">
                 <div class="text-center">
-                    <span class="text-[8px] text-gray-400 block uppercase font-bold">KALAN GÜN</span>
+                    <span class="text-[8px] text-gray-400 block uppercase font-bold">Kalan gün</span>
                     <span id="month-days-left" class="text-sm font-black text-white font-mono">--</span>
                 </div>
                 <div class="border-l border-emerald-500/20 pl-3">
-                    <span class="text-[8px] text-emerald-400 block uppercase font-bold">GEREKEN GÜNLÜK CİRO TEMPOSU</span>
+                    <span class="text-[8px] text-emerald-400 block uppercase font-bold">Hedef için günlük gereken</span>
                     <span id="daily-needed-pace" class="text-xs font-black text-emerald-300 font-mono glow-green">0 ₺ / gün</span>
                 </div>
             </div>
@@ -286,7 +290,7 @@
                     </div>
                     <div>
                         <div class="flex items-center space-x-2">
-                            <h2 id="user-name" class="text-white font-bold tracking-wider text-base glow-green">MISAFIR_KULLANICI</h2>
+                            <h2 id="user-name" class="text-white font-bold tracking-wider text-base glow-green">Misafir</h2>
                             <button id="edit-name-btn" class="text-[11px] text-gray-400 hover:text-[#00ff9f] transition-colors p-1" title="Siber İsmini Düzenle">✏️</button>
                         </div>
                         <p id="user-email-display" class="text-[9px] text-[#00ff9f]/60 font-mono">Giriş Bekleniyor</p>
@@ -296,7 +300,7 @@
                 </div>
                 <div class="mt-5 space-y-1.5">
                     <div class="flex justify-between text-[10px] text-gray-400 font-bold">
-                        <span>XP DÖNGÜSÜ</span>
+                        <span>Seviye ilerlemesi</span>
                         <span id="xp-text">0 / 100 XP</span>
                     </div>
                     <div class="w-full bg-[#0a1814] h-2.5 rounded border border-[#00ff9f]/10 overflow-hidden">
@@ -324,7 +328,7 @@
                     <div class="flex gap-2 mt-2">
                         <input type="text" id="deadline-title-input" placeholder="Hedef adı (Örn: Sınav, Teslimat)..." class="flex-1 bg-[#050a08] border border-red-500/20 text-white rounded p-1.5 text-xs focus:ring-red-400">
                         <input type="date" id="deadline-date-input" class="w-28 bg-[#050a08] border border-red-500/20 text-red-300 rounded p-1.5 text-xs font-mono focus:ring-red-400">
-                        <button id="add-deadline-btn" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase rounded transition-all">EKLE</button>
+                        <button id="add-deadline-btn" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase rounded transition-all">Ekle</button>
                     </div>
                 </details>
             </div>
@@ -335,7 +339,7 @@
                         <span class="text-base">🔋</span>
                         <h3 class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Biyo-sayaç</h3>
                     </div>
-                    <span class="text-[8px] px-1.5 py-0.5 bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 font-bold rounded">SIFIR FORM, SAF HLT</span>
+                    <span class="text-[8px] px-1.5 py-0.5 bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 font-bold rounded">Sıfır form, saf sağlık</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="bio-water-btn" class="bg-[#0a1814] border border-cyan-500/20 hover:border-cyan-400 p-2.5 rounded text-left transition-all group flex flex-col justify-between">
@@ -385,7 +389,7 @@
                     <div id="pomo-timer-display" class="text-4xl font-black text-white tracking-widest font-mono glow-green">25:00</div>
                     <div class="flex flex-col space-y-2 w-full sm:w-auto">
                         <div class="flex space-x-2 items-center justify-end">
-                            <span class="text-[9px] text-gray-400 font-bold uppercase">SÜRE (DK):</span>
+                            <span class="text-[9px] text-gray-400 font-bold uppercase">Süre (dk):</span>
                             <input type="number" id="pomo-custom-time" value="25" min="1" max="180" class="w-14 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] text-[10px] text-center font-bold rounded p-1 focus:ring-[#00ff9f]">
                         </div>
                         <select id="pomo-category" class="w-full bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] text-[9px] rounded p-1.5 focus:ring-[#00ff9f]">
@@ -398,8 +402,8 @@
                         </select>
                         <select id="pomo-skill" class="skill-select w-full bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] text-[9px] rounded p-1.5"></select>
                         <div class="flex space-x-2 justify-end">
-                            <button id="pomo-start-btn" class="px-3 py-1.5 bg-[#00ff9f] text-black text-[9px] font-bold rounded uppercase hover:bg-white transition-all flex-1 sm:flex-none text-center">BAŞLAT</button>
-                            <button id="pomo-reset-btn" class="px-3 py-1.5 bg-red-950/40 border border-red-500/30 text-red-400 text-[9px] font-bold rounded uppercase hover:bg-red-500 hover:text-white transition-all">SIFIRLA</button>
+                            <button id="pomo-start-btn" class="px-3 py-1.5 bg-[#00ff9f] text-black text-[9px] font-bold rounded uppercase hover:bg-white transition-all flex-1 sm:flex-none text-center">Başlat</button>
+                            <button id="pomo-reset-btn" class="px-3 py-1.5 bg-red-950/40 border border-red-500/30 text-red-400 text-[9px] font-bold rounded uppercase hover:bg-red-500 hover:text-white transition-all">Sıfırla</button>
                         </div>
                     </div>
                 </div>
@@ -414,7 +418,7 @@
                         </div>
                     </div>
                     <div class="text-right space-y-1">
-                        <span id="streak-status" class="text-[10px] px-2.5 py-1 bg-red-950/40 border border-red-500/30 text-red-400 font-bold rounded uppercase tracking-wider block">BUGÜN PASİF</span>
+                        <span id="streak-status" class="text-[10px] px-2.5 py-1 bg-red-950/40 border border-red-500/30 text-red-400 font-bold rounded uppercase tracking-wider block">Bugün pasif</span>
                         <div class="flex items-center justify-end space-x-1 text-[9px]">
                             <span>🛡️ Kalkan:</span>
                             <span id="streak-shield-count" class="text-cyan-400 font-mono font-bold">1 Adet</span>
@@ -461,7 +465,7 @@
                             <span id="battery-desc" class="text-[9px] text-gray-400">Normal Operasyon Modu Aktif</span>
                         </div>
                     </div>
-                    <button id="toggle-low-battery-btn" class="px-3 py-1.5 border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 text-[10px] font-bold rounded uppercase transition-all">🪫 DÜŞÜK ENERJİ MODUNA GEÇ</button>
+                    <button id="toggle-low-battery-btn" class="px-3 py-1.5 border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 text-[10px] font-bold rounded uppercase transition-all">🪫 Düşük enerji moduna geç</button>
                 </div>
                 <div id="low-battery-panel" class="hidden bg-gradient-to-r from-amber-950/70 to-[#07110e] border-2 border-amber-500 rounded p-5 space-y-4 glow-gold">
                     <div class="flex justify-between items-center border-b border-amber-500/30 pb-2">
@@ -472,7 +476,7 @@
                                 <p class="text-[9px] text-gray-300">Zihnin yorgun veya vardiya seni tüketmiş olabilir. Bu 3 mikro eylemi tamamla, serin korunsun!</p>
                             </div>
                         </div>
-                        <span class="text-[9px] px-2 py-0.5 bg-amber-500 text-black font-extrabold rounded uppercase">SERİ KORUMA</span>
+                        <span class="text-[9px] px-2 py-0.5 bg-amber-500 text-black font-extrabold rounded uppercase">Seri koruma</span>
                     </div>
                     <div id="low-battery-tasks-list" class="space-y-2 text-xs text-amber-100/70">Düşük enerji görevleri henüz atanmadı. Sadece dinlen.</div>
                 </div>
@@ -529,7 +533,7 @@
                                 <input type="checkbox" id="is-routine-checkbox" class="form-checkbox h-4 w-4 text-[#00ff9f] border-[#00ff9f]/40 bg-[#0a1814] rounded focus:ring-[#00ff9f]">
                                 <span class="text-[10px] text-gray-300 font-bold uppercase tracking-wider group-hover:text-white transition-colors">🔄 Her Gün Tekrarla (Rutin)</span>
                             </label>
-                            <button id="manual-add-btn" class="px-6 py-2 bg-[#00ff9f] text-black font-bold text-xs uppercase hover:bg-white hover:shadow-[0_0_15px_#00ff9f] transition-all rounded">EKLE</button>
+                            <button id="manual-add-btn" class="px-6 py-2 bg-[#00ff9f] text-black font-bold text-xs uppercase hover:bg-white hover:shadow-[0_0_15px_#00ff9f] transition-all rounded">Ekle</button>
                         </div>
                     </div>
 
@@ -539,7 +543,7 @@
                                 <span class="text-base text-yellow-400">🔄</span>
                                 <h3 class="text-xs text-yellow-400 font-bold uppercase tracking-wider">Günlük rutinler</h3>
                             </div>
-                            <span id="routine-counter" class="text-[9px] px-2 py-0.5 bg-yellow-950/40 border border-yellow-500/20 text-yellow-400 font-bold rounded">0 AKTİF</span>
+                            <span id="routine-counter" class="text-[9px] px-2 py-0.5 bg-yellow-950/40 border border-yellow-500/20 text-yellow-400 font-bold rounded">0 Aktif</span>
                         </div>
                         <div id="routine-list" class="space-y-2"></div>
                     </div>
@@ -550,7 +554,7 @@
                                 <span class="text-base text-[#00ff9f]">🎯</span>
                                 <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider">Görevler</h3>
                             </div>
-                            <span id="task-counter" class="text-[9px] px-2 py-0.5 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] font-bold rounded">0 AKTİF</span>
+                            <span id="task-counter" class="text-[9px] px-2 py-0.5 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] font-bold rounded">0 Aktif</span>
                         </div>
                         <div id="directive-list" class="space-y-3"></div>
                     </div>
@@ -566,7 +570,7 @@
                             </h3>
                             <p class="text-[9px] text-gray-400 mt-0.5">Hangi gün saat kaçta ne başardığını gösteren siber kara kutu.</p>
                         </div>
-                        <span id="history-total-count" class="text-[9px] px-2 py-1 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] font-mono font-bold rounded">0 KAYIT</span>
+                        <span id="history-total-count" class="text-[9px] px-2 py-1 bg-[#0a1814] border border-[#00ff9f]/20 text-[#00ff9f] font-mono font-bold rounded">0 Kayıt</span>
                     </div>
                     <div id="history-logs-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
                 </div>
@@ -602,27 +606,27 @@
                     <div class="bg-[#0a1814] border border-[#00ff9f]/20 rounded-lg p-4 flex flex-col space-y-4">
                         <div class="flex justify-between items-center border-b border-[#00ff9f]/10 pb-3 shrink-0 flex-wrap gap-2">
                             <div class="flex items-center space-x-2">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">SEÇİLEN GÜN:</span>
-                                <span id="selected-day-display" class="text-xs sm:text-sm font-bold text-[#00ff9f] tracking-wider glow-green whitespace-nowrap">BUGÜN</span>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">Seçilen gün:</span>
+                                <span id="selected-day-display" class="text-xs sm:text-sm font-bold text-[#00ff9f] tracking-wider glow-green whitespace-nowrap">Bugün</span>
                             </div>
-                            <span id="selected-day-total-badge" class="text-[10px] px-2 py-1 bg-[#050a08] border border-[#00ff9f]/20 text-[#00ff9f] font-mono rounded whitespace-nowrap">0 EYLEM</span>
+                            <span id="selected-day-total-badge" class="text-[10px] px-2 py-1 bg-[#050a08] border border-[#00ff9f]/20 text-[#00ff9f] font-mono rounded whitespace-nowrap">0 Eylem</span>
                         </div>
                         
                         <div class="flex-1 flex flex-col space-y-4 overflow-hidden">
                             <div class="flex-1 flex flex-col min-h-[150px]">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-3 shrink-0">⏳ OTOMATİK ZAMAN TÜNELİ</span>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-3 shrink-0">⏳ Otomatik zaman tüneli</span>
                                 <div id="timeline-container" class="flex-1 overflow-y-auto pl-4 border-l-2 border-[#00ff9f]/30 pr-2 space-y-3 max-h-80"></div>
                             </div>
                             
                             <div class="shrink-0 flex flex-col space-y-3 pt-4 border-t border-[#00ff9f]/10">
                                 <div class="flex justify-between items-center">
                                     <label class="text-[10px] text-yellow-300 font-bold uppercase tracking-wider flex items-center space-x-1">
-                                        <span>📝</span> <span>GÜNÜN ÖZEL NOTU</span>
+                                        <span>📝</span> <span>Günün özel notu</span>
                                     </label>
-                                    <span id="note-saved-status" class="text-[10px] text-emerald-400 hidden font-bold">KAYDEDİLDİ ✔</span>
+                                    <span id="note-saved-status" class="text-[10px] text-emerald-400 hidden font-bold">Kaydedildi ✔</span>
                                 </div>
                                 <textarea id="day-note-input" placeholder="Google Takvim stili geniş not alanı... Bugün neler oldu? Müşteri notları, aklına gelen fikirler veya günün kapanış özeti..." class="w-full h-28 md:h-36 bg-[#050a08] border border-[#00ff9f]/20 text-white rounded p-3 text-xs md:text-sm focus:ring-1 focus:ring-[#00ff9f] resize-none leading-relaxed transition-colors shadow-inner"></textarea>
-                                <button id="save-day-note-btn" class="w-full py-3 bg-[#00ff9f]/10 hover:bg-[#00ff9f] border border-[#00ff9f]/40 hover:text-black text-[#00ff9f] font-extrabold text-xs uppercase transition-all rounded">GÜNLÜK NOTU KAYDET</button>
+                                <button id="save-day-note-btn" class="w-full py-3 bg-[#00ff9f]/10 hover:bg-[#00ff9f] border border-[#00ff9f]/40 hover:text-black text-[#00ff9f] font-extrabold text-xs uppercase transition-all rounded">Günlük notu kaydet</button>
                             </div>
                         </div>
                     </div>
@@ -650,7 +654,7 @@
                             <h3 class="text-xs text-[#00ff9f] font-bold uppercase tracking-wider glow-green">🧭 Koç</h3>
                             <span class="text-[10px] text-gray-400">İlgi alanlarını birleştirip sana fikir verir</span>
                         </div>
-                        <button id="coach-clear" class="text-[10px] border border-gray-600 text-gray-400 px-2 py-1 rounded hover:text-white">TEMİZLE</button>
+                        <button id="coach-clear" class="text-[10px] border border-gray-600 text-gray-400 px-2 py-1 rounded hover:text-white">Temizle</button>
                     </div>
                     <div id="coach-messages" class="space-y-2 overflow-y-auto pr-1" style="height:min(55vh,460px)"></div>
                     <div class="flex flex-wrap gap-1.5">
@@ -662,7 +666,7 @@
                     </div>
                     <div class="flex gap-2">
                         <input id="coach-input" type="text" placeholder="Koçuna bir şey sor..." class="flex-1 bg-[#050a08] border border-[#00ff9f]/30 text-white rounded px-3 py-2 text-xs focus:outline-none focus:border-[#00ff9f]">
-                        <button id="coach-send" class="px-4 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">GÖNDER</button>
+                        <button id="coach-send" class="px-4 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">Gönder</button>
                     </div>
                     <div class="text-[9px] text-gray-600">Gemini ile çalışır. Yetenek adların, son eylemlerin ve gelir kaynaklarının özeti gönderilir; çok özel bilgi yazma.</div>
                 </div>
@@ -734,7 +738,7 @@
                 <div class="flex items-center space-x-2">
                     <span class="text-2xl animate-pulse">⚡</span>
                     <div>
-                        <h3 class="text-xs font-black text-amber-300 uppercase tracking-widest">30 SANİYELİK MİKRO-CHECKIN</h3>
+                        <h3 class="text-xs font-black text-amber-300 uppercase tracking-widest">30 saniyelik mini check-in</h3>
                         <span class="text-[9px] text-gray-400 font-mono">Güne Net Başla & Günü Zaferle Kapat</span>
                     </div>
                 </div>
@@ -742,7 +746,7 @@
             </div>
             <div id="morning-checkin-block" class="space-y-4">
                 <div class="space-y-1">
-                    <span class="text-[10px] text-gray-400 font-bold uppercase block">1. BUGÜNKÜ ENERJİ SEVİYEN:</span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block">1. Bugünkü enerji seviyen:</span>
                     <div class="grid grid-cols-5 gap-2">
                         <button class="checkin-energy-btn p-2 rounded border border-amber-500/20 text-xs font-bold hover:bg-amber-500/20 text-gray-300" data-val="1">🔋 20%</button>
                         <button class="checkin-energy-btn p-2 rounded border border-amber-500/20 text-xs font-bold hover:bg-amber-500/20 text-gray-300" data-val="2">🔋 40%</button>
@@ -752,15 +756,15 @@
                     </div>
                 </div>
                 <div class="space-y-1">
-                    <span class="text-[10px] text-amber-300 font-bold uppercase block">2. GÜNÜN APEX ZAFERİ NE OLACAK? (TEK SATIR):</span>
+                    <span class="text-[10px] text-amber-300 font-bold uppercase block">2. Günün apex zaferi ne olacak? (tek satır):</span>
                     <input type="text" id="checkin-apex-input" placeholder="Örn: 15 Dk İngilizce / Kurgu Taslağı" class="w-full bg-[#050a08] border border-amber-500/40 text-white rounded p-2 text-xs focus:ring-amber-400">
                 </div>
-                <button id="complete-morning-checkin-btn" class="w-full py-2.5 bg-amber-400 hover:bg-white text-black font-extrabold text-xs uppercase rounded transition-all shadow-[0_0_15px_#f59e0b]">GÜNE BAŞLA (+15 XP)</button>
+                <button id="complete-morning-checkin-btn" class="w-full py-2.5 bg-amber-400 hover:bg-white text-black font-extrabold text-xs uppercase rounded transition-all shadow-[0_0_15px_#f59e0b]">Güne başla (+15 XP)</button>
             </div>
             <div id="evening-checkin-block" class="space-y-4 pt-3 border-t border-amber-500/20">
-                <span class="text-[10px] text-purple-300 font-bold uppercase block">🌙 GÜN KAPANIŞI // BUGÜNÜN EN BÜYÜK ZAFERİ NEYDİ?</span>
+                <span class="text-[10px] text-purple-300 font-bold uppercase block">🌙 Gün kapanışı: bugünün en büyük zaferi neydi?</span>
                 <input type="text" id="checkin-evening-input" placeholder="Örn: Zorlu vardiyaya rağmen 1 seans odaklandım" class="w-full bg-[#050a08] border border-purple-500/40 text-white rounded p-2 text-xs focus:ring-purple-400">
-                <button id="complete-evening-checkin-btn" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase rounded transition-all">GÜNÜ ZAFERLE KAPAT (+15 XP)</button>
+                <button id="complete-evening-checkin-btn" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase rounded transition-all">Günü zaferle kapat (+15 XP)</button>
             </div>
         </div>
     </div>
@@ -771,7 +775,7 @@
                 <div class="flex items-center space-x-2">
                     <span class="text-2xl">📊</span>
                     <div>
-                        <h3 class="text-sm font-extrabold text-purple-300 uppercase tracking-widest">SİBER DEBRIEF // HAFTALIK KARNE</h3>
+                        <h3 class="text-sm font-extrabold text-purple-300 uppercase tracking-widest">Haftalık karne</h3>
                         <span class="text-[9px] text-gray-400 font-mono">Son 7 Günlük Performans</span>
                     </div>
                 </div>
@@ -779,34 +783,34 @@
             </div>
             <div class="bg-[#050a08] border border-purple-500/20 p-4 rounded flex items-center justify-between">
                 <div>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase block">BU HAFTANIN DİSİPLİN DERECESİ:</span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block">Bu haftanın disiplin derecesi:</span>
                     <span id="debrief-grade-desc" class="text-xs text-white mt-1 block">Hesaplanıyor...</span>
                 </div>
                 <div id="debrief-grade-badge" class="text-3xl font-black text-purple-400 font-mono border-2 border-purple-500 px-3 py-1 rounded bg-purple-950/40">--</div>
             </div>
             <div class="grid grid-cols-3 gap-2 text-center text-xs">
                 <div class="bg-[#0a1814] p-3 rounded border border-[#00ff9f]/10">
-                    <span class="text-gray-400 text-[9px] block uppercase font-bold">HAFTALIK GÖREV</span>
+                    <span class="text-gray-400 text-[9px] block uppercase font-bold">Haftalık görev</span>
                     <span id="debrief-tasks-count" class="text-lg font-black text-[#00ff9f] font-mono">0</span>
                 </div>
                 <div class="bg-[#0a1814] p-3 rounded border border-[#00ff9f]/10">
-                    <span class="text-gray-400 text-[9px] block uppercase font-bold">ODAKLANMA (DK)</span>
+                    <span class="text-gray-400 text-[9px] block uppercase font-bold">Odaklanma (dk)</span>
                     <span id="debrief-pomo-count" class="text-lg font-black text-yellow-400 font-mono">0 dk</span>
                 </div>
                 <div class="bg-[#0a1814] p-3 rounded border border-emerald-500/20">
-                    <span class="text-emerald-400 text-[9px] block uppercase font-bold">AYLIK CİRO</span>
+                    <span class="text-emerald-400 text-[9px] block uppercase font-bold">Aylık gelir</span>
                     <span id="debrief-income-count" class="text-lg font-black text-emerald-300 font-mono">0 ₺</span>
                 </div>
             </div>
             
             <div class="bg-[#0a1814] border border-emerald-500/30 p-3 rounded space-y-2">
                 <span class="text-[10px] text-emerald-400 font-bold uppercase flex items-center space-x-1">
-                    <span>💰</span><span>GELİR / CİRO GİRİŞİ YAP (+XP KAZANDIRIR)</span>
+                    <span>💰</span><span>Gelir girişi yap (+XP kazandırır)</span>
                 </span>
                 <div class="flex gap-2">
                     <input type="text" id="debrief-income-source" placeholder="Kaynak (Örn: Dolap Satışı)" class="flex-1 bg-[#050a08] border border-emerald-500/20 text-white rounded p-1.5 text-xs focus:ring-emerald-400">
                     <input type="number" id="debrief-income-amount" placeholder="₺ Miktar" class="w-24 bg-[#050a08] border border-emerald-500/20 text-emerald-300 rounded p-1.5 text-xs font-mono focus:ring-emerald-400">
-                    <button id="debrief-income-add-btn" class="px-3 py-1.5 bg-emerald-500 hover:bg-white text-black font-bold text-xs uppercase rounded transition-all">EKLE</button>
+                    <button id="debrief-income-add-btn" class="px-3 py-1.5 bg-emerald-500 hover:bg-white text-black font-bold text-xs uppercase rounded transition-all">Ekle</button>
                 </div>
             </div>
         </div>
@@ -818,7 +822,7 @@
                 <div class="flex items-center space-x-2">
                     <span class="text-2xl">💾</span>
                     <div>
-                        <h3 class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-widest">VERİ KASASI</h3>
+                        <h3 class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-widest">Veri kasası</h3>
                         <span class="text-[10px] text-gray-400">İlerlemen bir daha kaybolmasın diye</span>
                     </div>
                 </div>
@@ -834,13 +838,13 @@
             <div id="vault-cloud-info" class="text-[11px] text-gray-300 font-mono"></div>
 
             <div class="grid grid-cols-2 gap-2">
-                <button id="vault-download-btn" class="py-2 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">⬇️ YEDEK İNDİR</button>
-                <button id="vault-restore-btn" class="py-2 border border-[#00ff9f]/50 text-[#00ff9f] font-bold text-xs rounded hover:bg-[#00ff9f]/20">⬆️ DOSYADAN YÜKLE</button>
+                <button id="vault-download-btn" class="py-2 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">⬇️ Yedek indir</button>
+                <button id="vault-restore-btn" class="py-2 border border-[#00ff9f]/50 text-[#00ff9f] font-bold text-xs rounded hover:bg-[#00ff9f]/20">⬆️ Dosyadan yükle</button>
                 <input type="file" id="vault-file-input" accept=".json,application/json" class="hidden">
             </div>
 
             <div>
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">OTOMATİK GÜNLÜK YEDEKLER (BU CİHAZ)</span>
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Otomatik günlük yedekler (bu cihaz)</span>
                 <div id="vault-snapshots-list" class="space-y-1.5"></div>
             </div>
         </div>
@@ -882,7 +886,7 @@
                 <div class="flex items-center gap-2">
                     <button id="mr-prev" class="w-8 h-8 text-purple-300 rounded-full hover:bg-purple-500/20" aria-label="Önceki ay">◀</button>
                     <div>
-                        <h3 class="text-sm font-extrabold text-purple-300 uppercase tracking-widest">📅 AYLIK KARNE</h3>
+                        <h3 class="text-sm font-extrabold text-purple-300 uppercase tracking-widest">📅 Aylık karne</h3>
                         <div id="mr-title" class="text-base font-bold text-white"></div>
                     </div>
                     <button id="mr-next" class="w-8 h-8 text-purple-300 rounded-full hover:bg-purple-500/20" aria-label="Sonraki ay">▶</button>
@@ -890,7 +894,7 @@
                 <button id="mr-close" class="text-gray-400 hover:text-white text-lg" aria-label="Kapat">✕</button>
             </div>
             <div id="mr-body" class="space-y-4"></div>
-            <button id="mr-coach" class="w-full py-2.5 border border-[#00ff9f]/40 text-[#00ff9f] text-xs font-bold rounded hover:bg-[#00ff9f]/10">🧭 KOÇA BU AYI YORUMLAT</button>
+            <button id="mr-coach" class="w-full py-2.5 border border-[#00ff9f]/40 text-[#00ff9f] text-xs font-bold rounded hover:bg-[#00ff9f]/10">🧭 Koça bu ayı yorumlat</button>
         </div>
     </div>
 
@@ -898,7 +902,7 @@
         <div class="bg-[#07110e] border-2 border-amber-400/50 rounded-lg max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-amber-400/30 pb-3">
                 <div>
-                    <h3 class="text-sm font-extrabold text-amber-300 uppercase tracking-widest">🔔 HATIRLATMALAR</h3>
+                    <h3 class="text-sm font-extrabold text-amber-300 uppercase tracking-widest">🔔 Hatırlatmalar</h3>
                     <span class="text-[11px] text-gray-400">Sadece yapmadığın rutin ve görevler için gelir; hepsi bittiyse rahatsız etmez</span>
                 </div>
                 <button id="rem-close" class="text-gray-400 hover:text-white text-lg" aria-label="Kapat">✕</button>
@@ -916,8 +920,8 @@
                 <div class="text-[10px] text-gray-500">Seçtikten sonra <b>Bildirimleri aç</b>'a basınca kaydedilir.</div>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <button id="rem-enable" class="py-2.5 bg-amber-400 text-black font-bold text-xs rounded hover:bg-white">🔔 BİLDİRİMLERİ AÇ</button>
-                <button id="rem-disable" class="py-2.5 border border-gray-600 text-gray-300 font-bold text-xs rounded">KAPAT</button>
+                <button id="rem-enable" class="py-2.5 bg-amber-400 text-black font-bold text-xs rounded hover:bg-white">🔔 Bildirimleri aç</button>
+                <button id="rem-disable" class="py-2.5 border border-gray-600 text-gray-300 font-bold text-xs rounded">Kapat</button>
             </div>
             <button id="rem-test" class="w-full py-2 border border-amber-500/30 text-amber-200 text-xs rounded">🧪 Bu cihaza deneme bildirimi gönder</button>
             <div class="text-[10px] text-gray-500 leading-relaxed">iPhone'da bildirimler sadece Ana Ekrana eklenen <b>XP</b> uygulamasında çalışır. Bildirimler birkaç dakika gecikmeli gelebilir.</div>
@@ -926,15 +930,15 @@
 
     <div id="skill-picker-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-[#07110e] border-2 border-[#00ff9f]/50 rounded-lg max-w-sm w-full p-5 space-y-3">
-            <h3 id="skill-picker-title" class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-wider">YETENEK SEÇ</h3>
+            <h3 id="skill-picker-title" class="text-sm font-extrabold text-[#00ff9f] uppercase tracking-wider">Yetenek seç</h3>
             <select id="skill-picker-select" class="skill-select w-full bg-[#050a08] border border-[#00ff9f]/30 text-[#00ff9f] rounded p-2 text-xs"></select>
             <div id="skill-picker-pct-row" class="hidden flex items-center gap-2">
                 <span class="text-[10px] text-gray-400 font-bold uppercase">Katkı oranı %</span>
                 <input id="skill-picker-pct" type="number" min="5" max="100" value="30" class="w-20 bg-[#050a08] border border-[#00ff9f]/30 text-[#00ff9f] rounded p-1 text-xs text-center">
             </div>
             <div class="flex gap-2 pt-1">
-                <button id="skill-picker-cancel" class="flex-1 py-2 border border-gray-600 text-gray-300 text-xs font-bold rounded">VAZGEÇ</button>
-                <button id="skill-picker-ok" class="flex-1 py-2 bg-[#00ff9f] text-black text-xs font-bold rounded hover:bg-white">KAYDET</button>
+                <button id="skill-picker-cancel" class="flex-1 py-2 border border-gray-600 text-gray-300 text-xs font-bold rounded">Vazgeç</button>
+                <button id="skill-picker-ok" class="flex-1 py-2 bg-[#00ff9f] text-black text-xs font-bold rounded hover:bg-white">Kaydet</button>
             </div>
         </div>
     </div>
@@ -1003,18 +1007,19 @@
             console.log(`[${level}] ${message}`);
         }
 
+        function rankTitle(l) {
+            return l >= 50 ? 'Efsane' : l >= 35 ? 'Usta' : l >= 25 ? 'Kaşif' : l >= 15 ? 'Yolcu' : l >= 8 ? 'Çırak' : 'Acemi';
+        }
+
         function triggerAlert(msg, type = 'diagnostic') {
             const container = document.getElementById('alert-container');
             const banner = document.createElement('div');
-            banner.className = `p-3.5 border text-xs font-bold uppercase rounded flex justify-between items-center transition-all duration-300 pointer-events-auto ${
-                type === 'error' ? 'bg-red-950/95 border-red-500 text-white' : 'bg-[#07110e]/95 border-[#00ff9f] text-[#00ff9f] glow-green'
+            banner.className = `px-4 py-3 rounded-2xl flex justify-between items-start gap-3 text-[13px] leading-snug shadow-2xl backdrop-blur-xl transition-all duration-300 pointer-events-auto ${
+                type === 'error' ? 'bg-[#2a1214]/95 border border-red-500/40 text-red-50' : 'bg-[#1b2226]/95 border border-white/10 text-white'
             }`;
             banner.innerHTML = `
-                <div>
-                    <span class="block">${type === 'error' ? '[UYARI]' : '[BİLDİRİM]'}</span>
-                    <span class="text-xs font-normal text-gray-300">${msg}</span>
-                </div>
-                <button class="ml-4 text-gray-400 hover:text-white" onclick="this.parentElement.remove()">✕</button>
+                <div class="flex gap-2.5"><span>${type === 'error' ? '⚠️' : '✨'}</span><span>${msg}</span></div>
+                <button class="text-gray-400 hover:text-white shrink-0" onclick="this.parentElement.remove()" aria-label="Kapat">✕</button>
             `;
             container.appendChild(banner);
             setTimeout(() => banner.remove(), 6000);
@@ -2291,13 +2296,13 @@
                 const displayName = localState.customName || currentUser.displayName || "KULLANICI";
                 document.getElementById('user-name').innerText = displayName.toUpperCase();
             } else {
-                const guestName = localState.customName || "MISAFIR_KULLANICI";
+                const guestName = localState.customName || "Misafir";
                 document.getElementById('user-name').innerText = guestName.toUpperCase();
             }
 
             const currentXp = localState.xp || 0;
             const details = calculateLevelDetails(currentXp);
-            document.getElementById('user-rank').innerText = `Lvl ${details.level} // Yolcu // Safha ${details.level}`;
+            document.getElementById('user-rank').innerText = `Seviye ${details.level} · ${rankTitle(details.level)}`;
             document.getElementById('xp-text').innerText = `${details.earnedInLevel} / ${details.neededInLevel} XP`;
             document.getElementById('xp-bar').style.width = `${details.percentage}%`;
             const wx = walletXp();
@@ -2310,17 +2315,17 @@
             
             const statusBadge = document.getElementById('streak-status');
             if (localState.streak?.lastActiveDate === getTodayStr() && localState.streak?.dailyCompleted) {
-                statusBadge.innerText = "BUGÜN AKTİF ✔";
+                statusBadge.innerText = "Bugün aktif ✔";
                 statusBadge.className = "text-[10px] px-2.5 py-1 bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-bold rounded uppercase tracking-wider block";
             } else {
-                statusBadge.innerText = "BUGÜN PASİF";
+                statusBadge.innerText = "Bugün pasif";
                 statusBadge.className = "text-[10px] px-2.5 py-1 bg-red-950/40 border border-red-500/30 text-red-400 font-bold rounded uppercase tracking-wider block";
             }
 
             const target = localState.monthlyTarget || 10000;
             const earned = getMonthIncome();
             localState.monthlyEarned = earned;
-            document.getElementById('income-month-label').innerText = `// ${monthKeyLabel(getMonthKey())}`;
+            document.getElementById('income-month-label').innerText = `· ${monthKeyLabel(getMonthKey()).toLocaleLowerCase('tr-TR').replace(/^./, c => c.toLocaleUpperCase('tr-TR'))}`;
             const pct = Math.min(100, Math.round((earned / target) * 100));
             document.getElementById('monthly-target-display').innerText = `${target.toLocaleString('tr-TR')} ₺`;
             document.getElementById('monthly-earned-display').innerText = `${earned.toLocaleString('tr-TR')} ₺`;
@@ -2455,14 +2460,14 @@
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 
                 let badgeClass = "bg-red-950/60 border-red-500/50 text-red-400";
-                let badgeText = `${diffDays} GÜN KALDI`;
+                let badgeText = `${diffDays} gün kaldı`;
                 
                 if (diffDays === 0) {
                     badgeClass = "bg-yellow-950/60 border-yellow-500/50 text-yellow-400 animate-pulse";
                     badgeText = "SON GÜN!";
                 } else if (diffDays < 0) {
                     badgeClass = "bg-gray-900 border-gray-700 text-gray-500";
-                    badgeText = "SÜRE DOLDU";
+                    badgeText = "Süre doldu";
                 }
 
                 return `
@@ -2516,7 +2521,7 @@
             const t = getTodayStr();
             const tm = new Date(); tm.setDate(tm.getDate() + 1);
             const tmr = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, '0')}-${String(tm.getDate()).padStart(2, '0')}`;
-            if (d.penalized || d.due < t) return `<span class="px-1.5 rounded bg-red-500/20 text-red-300 font-bold">⛔ GECİKTİ −${2 * d.xp}</span>`;
+            if (d.penalized || d.due < t) return `<span class="px-1.5 rounded bg-red-500/20 text-red-300 font-bold">⛔ Gecikti −${2 * d.xp}</span>`;
             if (d.due === t) return `<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold">⏳ Bugün · −${2 * d.xp} risk</span>`;
             if (d.due === tmr) return `<span class="px-1.5 rounded border border-white/10 text-gray-300">⏳ Yarın</span>`;
             return `<span class="px-1.5 rounded border border-white/10 text-gray-300">⏳ ${d.due.split('-').reverse().slice(0, 2).join('.')}</span>`;
@@ -2529,11 +2534,11 @@
 
             if (!localState.directives || localState.directives.length === 0) {
                 list.innerHTML = `<div class="text-center py-6 text-gray-600 text-xs font-mono">Aktif tek seferlik görev bulunmuyor.</div>`;
-                count.innerText = "0 AKTİF";
+                count.innerText = "0 aktif";
                 return;
             }
 
-            count.innerText = `${localState.directives.length} AKTİF`;
+            count.innerText = `${localState.directives.length} aktif`;
             list.innerHTML = localState.directives.map(d => `
                 <div class="bg-[#0a1814] border ${d.penalized ? 'border-red-500/30' : 'border-[#00ff9f]/10'} p-3 rounded flex items-start gap-3 group">
                     <div class="flex-1 min-w-0">
@@ -2559,12 +2564,12 @@
 
             if (!localState.routines || localState.routines.length === 0) {
                 list.innerHTML = `<div class="text-center py-4 text-gray-600 text-xs font-mono">Kayıtlı günlük rutin bulunmuyor.</div>`;
-                count.innerText = "0 AKTİF";
+                count.innerText = "0 aktif";
                 return;
             }
 
             const today = getTodayStr();
-            count.innerText = `${localState.routines.length} AKTİF`;
+            count.innerText = `${localState.routines.length} aktif`;
             
             list.innerHTML = localState.routines.map(r => {
                 const isCompletedToday = r.lastCompletedDate === today;
@@ -2578,8 +2583,8 @@
                     <div class="flex items-center space-x-2">
                         <button class="text-gray-600 hover:text-red-500 px-2 transition-colors opacity-0 group-hover:opacity-100" onclick="window.deleteRoutine('${r.id}')" title="Sil">✕</button>
                         ${isCompletedToday 
-                            ? `<span class="text-[9px] text-gray-500 font-bold border border-gray-700 px-2 py-1 rounded">YAPILDI ✔</span>` 
-                            : `<button class="px-3 py-1 bg-yellow-400 text-black font-bold text-[10px] rounded hover:bg-white" onclick="window.completeRoutine('${r.id}')">YAPILDI</button>`
+                            ? `<span class="text-[9px] text-gray-500 font-bold border border-gray-700 px-2 py-1 rounded">Yapıldı ✔</span>` 
+                            : `<button class="px-3 py-1 bg-yellow-400 text-black font-bold text-[10px] rounded hover:bg-white" onclick="window.completeRoutine('${r.id}')">Yapıldı</button>`
                         }
                     </div>
                 </div>
@@ -2768,10 +2773,10 @@
             toggleLowBatteryBtn.onclick = () => {
                 lowBatteryPanel.classList.toggle('hidden');
                 if (lowBatteryPanel.classList.contains('hidden')) {
-                    toggleLowBatteryBtn.innerText = "🪫 DÜŞÜK ENERJİ MODUNA GEÇ";
+                    toggleLowBatteryBtn.innerText = "🪫 Mini görevler";
                     document.getElementById('battery-desc').innerText = "Normal Operasyon Modu Aktif";
                 } else {
-                    toggleLowBatteryBtn.innerText = "⚡ NORMALE DÖN";
+                    toggleLowBatteryBtn.innerText = "⚡ Normale dön";
                     document.getElementById('battery-desc').innerText = "Düşük Enerji (Koruma) Modu Aktif";
                     renderLowBatteryTasks();
                 }
@@ -2813,7 +2818,7 @@
         };
 
         document.getElementById('edit-name-btn').onclick = async () => {
-            const currentName = localState.customName || (currentUser ? currentUser.displayName : "MISAFIR_KULLANICI");
+            const currentName = localState.customName || (currentUser ? currentUser.displayName : "Misafir");
             const newName = prompt("Yeni Siber İsmini belirle:", currentName);
             
             if (newName && newName.trim() !== "") {
@@ -2861,11 +2866,11 @@
 
             if (!localState.actionLogs || localState.actionLogs.length === 0) {
                 list.innerHTML = `<div class="text-center py-6 text-gray-600 text-xs font-mono">Henüz kayıtlı operasyon günlüğü bulunmuyor.</div>`;
-                count.innerText = "0 KAYIT";
+                count.innerText = "0 kayıt";
                 return;
             }
 
-            count.innerText = `${localState.actionLogs.length} KAYIT`;
+            count.innerText = `${localState.actionLogs.length} kayıt`;
             list.innerHTML = localState.actionLogs.slice(-40).reverse().map(l => `
                 <div class="bg-[#050a08] border border-[#00ff9f]/10 p-2 rounded text-[10px] flex justify-between items-center">
                     <div>
@@ -3161,7 +3166,7 @@
             }
 
             const dayLogs = (localState.actionLogs || []).filter(l => l.dateStr === selectedCalendarDateStr && l.xp !== undefined && l.xp !== null && !isNaN(l.xp));
-            totalBadge.innerText = `${dayLogs.length} EYLEM`;
+            totalBadge.innerText = `${dayLogs.length} eylem`;
 
             if (dayLogs.length === 0) {
                 container.innerHTML = `
@@ -3277,7 +3282,7 @@
                 decayWarningDisplay.innerText = `⚠️ ${msg}`;
                 decayWarningDisplay.className = "mt-4 text-[9px] text-red-400 font-mono text-center w-full font-bold";
             } else {
-                decayWarningDisplay.innerText = "TÜM SİNİR AĞLARI STABİL ✔";
+                decayWarningDisplay.innerText = "Her alan dengede ✔";
                 decayWarningDisplay.className = "mt-4 text-[9px] text-[#00ff9f]/50 font-mono text-center w-full";
             }
         }
@@ -3311,9 +3316,9 @@
                 clearInterval(pomoInterval);
                 pomoInterval = null;
                 pomoEndTime = null;
-                pomoStartBtn.innerText = "DEVAM ET";
+                pomoStartBtn.innerText = "Devam et";
             } else {
-                pomoStartBtn.innerText = "DURAKLAT";
+                pomoStartBtn.innerText = "Duraklat";
                 pomoEndTime = Date.now() + (pomoSecondsLeft * 1000);
                 pomoInterval = setInterval(async () => {
                     const now = Date.now();
@@ -3327,7 +3332,7 @@
                         pomoEndTime = null;
                         pomoSecondsLeft = 0;
                         formatPomoDisplay();
-                        pomoStartBtn.innerText = "BAŞLAT";
+                        pomoStartBtn.innerText = "Başlat";
                         
                         const minutes = parseInt(pomoCustomInput.value) || 25;
                         const cat = document.getElementById('pomo-category').value;
@@ -3351,7 +3356,7 @@
             pomoInterval = null;
             pomoEndTime = null;
             pomoSecondsLeft = (parseInt(pomoCustomInput.value) || 25) * 60;
-            pomoStartBtn.innerText = "BAŞLAT";
+            pomoStartBtn.innerText = "Başlat";
             formatPomoDisplay();
         };
 
@@ -4025,7 +4030,7 @@ Kurallar:
                 if (isIOS && !isStandalone) { triggerAlert("iPhone'da bildirimler için siteyi Ana Ekrandaki XP uygulamasından açman gerekiyor.", 'error'); return; }
                 if (!pushSupported()) { triggerAlert("Bu tarayıcı bildirimleri desteklemiyor.", 'error'); return; }
                 if (!currentUser) { triggerAlert("Önce Google ile giriş yap; hatırlatmalar bulut hesabına bağlı çalışıyor.", 'error'); return; }
-                btn.innerText = 'İZİN İSTENİYOR…';
+                btn.innerText = 'İzin isteniyor…';
                 const perm = await Notification.requestPermission();
                 if (perm !== 'granted') { triggerAlert("Bildirim izni verilmedi.", 'error'); return; }
                 const reg = await getPushRegistration();
@@ -4042,7 +4047,7 @@ Kurallar:
             } catch (e) {
                 console.warn(e);
                 triggerAlert("Bildirim açılamadı: " + (e.code || e.message), 'error');
-            } finally { btn.innerText = '🔔 BİLDİRİMLERİ AÇ'; renderReminders(); }
+            } finally { btn.innerText = '🔔 Bildirimleri aç'; renderReminders(); }
         };
         document.getElementById('rem-disable').onclick = async () => {
             const r = remState(); r.enabled = false; remTimesDraft = null;
@@ -4183,7 +4188,7 @@ Kurallar:
             if (user) {
                 currentUser = user;
                 cloudReadOk = false;
-                authBtn.innerText = "ÇIKIŞ";
+                authBtn.innerText = "Çıkış";
                 document.getElementById('user-email-display').innerText = user.email;
                 if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
                 await syncCloudVault(user);
@@ -4191,9 +4196,9 @@ Kurallar:
                 currentUser = null;
                 cloudReadOk = false;
                 setSyncStatus('off');
-                authBtn.innerText = "GOOGLE İLE BAĞLAN";
-                document.getElementById('user-name').innerText = localState.customName || "MISAFIR_KULLANICI";
-                document.getElementById('user-email-display').innerText = "Giriş Bekleniyor";
+                authBtn.innerText = "Google ile bağlan";
+                document.getElementById('user-name').innerText = localState.customName || "Misafir";
+                document.getElementById('user-email-display').innerText = "Giriş yapılmadı";
                 updateDashboardUI();
             }
         });
