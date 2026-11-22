@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PersonaXP">
-    <meta name="theme-color" content="#050a08">
+    <meta name="theme-color" content="#0b0d0f">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" href="icon-192.png">
@@ -224,6 +224,9 @@
         [id^="section-"]:not(.hidden) { animation: tabIn .35s ease; }
         @keyframes tabIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+            /* Üst kısım: başlık camdan muaf, saat/çentik alanı koyu kalsın */
+        html { background: #0b0d0f !important; }
+        header, header[class*="bg-"] { background: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none !important; border: 0 !important; }
     </style>
 </head>
 <body class="antialiased relative min-h-screen pb-12 select-none" data-tab="tasks">
