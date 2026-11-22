@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" href="icon-192.png">
     <title>PersonaXP</title>
-    <link rel="stylesheet" href="tw.css?v=b09fcdfb">
+    <link rel="stylesheet" href="tw.css?v=dd26bd24">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -167,6 +167,63 @@
         .uppercase { text-transform: none !important; }
         .tracking-wider, .tracking-widest, .tracking-wide { letter-spacing: 0 !important; }
         .glow-green, .glow-red, .glow-gold { text-shadow: none !important; }
+    
+        /* ===== LIQUID GLASS (iOS 26 esintisi) =====
+           Arkada yumuşak renk ışıkları; kartlar, alt menü ve pencereler bunları bulanık ve parlak kenarlı cam gibi gösterir. */
+        :root { --spring: cubic-bezier(.34, 1.56, .64, 1); --glass-hi: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.06); }
+        body::before { content: ""; position: fixed; inset: -20vmax; z-index: -1; pointer-events: none;
+            background:
+                radial-gradient(38vmax 38vmax at 12% 8%, rgba(52,211,153,.16), transparent 60%),
+                radial-gradient(34vmax 34vmax at 92% 30%, rgba(96,165,250,.13), transparent 60%),
+                radial-gradient(40vmax 40vmax at 30% 85%, rgba(167,139,250,.12), transparent 60%),
+                #0b0d0f;
+            animation: ambient 28s ease-in-out infinite alternate; }
+        @keyframes ambient { to { transform: translate3d(3vmax, -2vmax, 0) rotate(8deg); } }
+        body { background: transparent !important; }
+        [class*="bg-[#07110e]"], [class*="bg-[#0a1814]"] {
+            background-color: rgba(22, 27, 31, .58) !important;
+            -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+            box-shadow: var(--glass-hi), 0 10px 30px rgba(0,0,0,.25) !important; border-color: rgba(255,255,255,.07) !important; }
+        /* iç içe cam bulanıklığı pahalı: içteki kartlarda bulanıklık yok */
+        [class*="bg-[#07110e]"] [class*="bg-[#0a1814]"], [class*="bg-[#07110e]"] [class*="bg-[#07110e]"] {
+            -webkit-backdrop-filter: none; backdrop-filter: none; background-color: rgba(255,255,255,.035) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important; }
+        /* alt menü: yüzen cam kapsül + kayan parlak seçim merceği */
+        @media (max-width: 767px) {
+            #bottom-nav { left: 10px !important; right: 10px !important; bottom: calc(max(6px, env(safe-area-inset-bottom) - 14px)) !important;
+                border-radius: 30px; border: 1px solid rgba(255,255,255,.10) !important; padding: 5px !important;
+                background: rgba(28, 33, 37, .52) !important; -webkit-backdrop-filter: blur(26px) saturate(190%); backdrop-filter: blur(26px) saturate(190%);
+                box-shadow: var(--glass-hi), 0 12px 40px rgba(0,0,0,.45); }
+            #bottom-nav button { position: relative; z-index: 1; padding-top: 7px !important; padding-bottom: 6px !important; transition: transform .35s var(--spring), color .25s; }
+            #bottom-nav button:active { transform: scale(.88); }
+            #bottom-nav .bn-dot { display: none; }
+            #bn-lens { position: absolute; z-index: 0; top: 5px; bottom: 5px; left: 5px; border-radius: 24px;
+                background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
+                box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.06), 0 4px 14px rgba(0,0,0,.25);
+                transition: transform .55s var(--spring), width .35s ease; }
+            #fab-add { bottom: calc(84px + max(6px, env(safe-area-inset-bottom) - 14px)) !important;
+                background: linear-gradient(180deg, rgba(74,222,128,.92), rgba(16,185,129,.88)) !important;
+                -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+                box-shadow: inset 0 1.5px 0 rgba(255,255,255,.45), inset 0 -2px 6px rgba(0,0,0,.15), 0 10px 28px rgba(16,185,129,.35) !important;
+                transition: transform .4s var(--spring); }
+            #fab-add:active { transform: scale(.9); }
+            body { padding-bottom: 110px !important; }
+        }
+        /* dokununca yaylanan düğmeler */
+        button { transition: transform .35s var(--spring), background-color .2s, opacity .2s; }
+        button:active:not(:disabled) { transform: scale(.96); }
+        /* pencereler ve alt sayfa: cam + yaylı açılış */
+        [id$="-modal"] > div, #add-sheet > div:last-child {
+            background-color: rgba(24, 29, 33, .72) !important; -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%);
+            box-shadow: var(--glass-hi), 0 24px 60px rgba(0,0,0,.5) !important; border-color: rgba(255,255,255,.08) !important; }
+        [id$="-modal"]:not(.hidden) > div { animation: glassPop .45s var(--spring); }
+        #add-sheet:not(.hidden) > div:last-child { animation: sheetUp .5s var(--spring); }
+        @keyframes glassPop { from { opacity: 0; transform: scale(.92) translateY(8px); } to { opacity: 1; transform: none; } }
+        @keyframes sheetUp { from { transform: translateY(40%); opacity: .4; } to { transform: none; opacity: 1; } }
+        #alert-container > div { animation: glassPop .45s var(--spring); }
+        /* sekme değişince içerik yumuşakça gelsin */
+        [id^="section-"]:not(.hidden) { animation: tabIn .35s ease; }
+        @keyframes tabIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
     </style>
 </head>
 <body class="antialiased relative min-h-screen pb-12 select-none" data-tab="tasks">
@@ -665,8 +722,8 @@
                         <button onclick="window.coachQuick('week')" class="text-[10px] border border-cyan-500/30 text-cyan-300 px-2 py-1 rounded hover:bg-cyan-500/10">📊 Haftamı değerlendir</button>
                     </div>
                     <div class="flex gap-2">
-                        <input id="coach-input" type="text" placeholder="Koçuna bir şey sor..." class="flex-1 bg-[#050a08] border border-[#00ff9f]/30 text-white rounded px-3 py-2 text-xs focus:outline-none focus:border-[#00ff9f]">
-                        <button id="coach-send" class="px-4 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">Gönder</button>
+                        <input id="coach-input" type="text" placeholder="Koçuna bir şey sor..." class="flex-1 min-w-0 bg-[#050a08] border border-[#00ff9f]/30 text-white rounded px-3 py-2 text-xs focus:outline-none focus:border-[#00ff9f]">
+                        <button id="coach-send" class="shrink-0 px-4 bg-[#00ff9f] text-black font-bold text-xs rounded hover:bg-white">Gönder</button>
                     </div>
                     <div class="text-[9px] text-gray-600">Gemini ile çalışır. Yetenek adların, son eylemlerin ve gelir kaynaklarının özeti gönderilir; çok özel bilgi yazma.</div>
                 </div>
@@ -703,7 +760,8 @@
         </div>
     </main>
 
-    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d0f]/95 backdrop-blur border-t border-[#1a1f22] grid grid-cols-6" style="padding-bottom: max(4px, calc(env(safe-area-inset-bottom) - 16px))">
+    <nav id="bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 grid grid-cols-6">
+        <span id="bn-lens" aria-hidden="true"></span>
         <button data-bn="home" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🏠</span><span class="text-[10px] font-semibold">Bugün</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
         <button data-bn="calendar" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🗓️</span><span class="text-[10px] font-semibold">Takvim</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
         <button data-bn="tree" class="flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-gray-500"><span class="text-[21px] leading-none">🌌</span><span class="text-[10px] font-semibold">Yetenek</span><span class="bn-dot w-1 h-1 rounded-full bg-[#00ff9f] opacity-0"></span></button>
@@ -3711,7 +3769,18 @@ Kurallar:
                 b.classList.toggle('text-gray-500', !on);
                 b.querySelector('.bn-dot')?.classList.toggle('opacity-0', !on);
             });
+            moveLens();
         }
+        // Seçili sekmenin arkasındaki cam mercek yaylanarak kayar
+        function moveLens() {
+            const lens = document.getElementById('bn-lens'), nav = document.getElementById('bottom-nav');
+            const btn = [...(nav?.querySelectorAll('[data-bn]') || [])].find(b => b.classList.contains('text-[#00ff9f]'));
+            if (!lens || !btn) return;
+            lens.style.width = btn.offsetWidth + 'px';
+            lens.style.transform = `translateX(${btn.offsetLeft - 5}px)`;
+        }
+        window.addEventListener('resize', () => moveLens());
+
         function goMobileTab(t) {
             if (t === 'home') { document.getElementById('nav-tasks')?.click(); document.body.dataset.tab = 'home'; }
             else if (t === 'profile') { document.getElementById('nav-history')?.click(); document.body.dataset.tab = 'profile'; }
