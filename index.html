@@ -163,7 +163,7 @@
     <div class="crt-overlay"></div>
     <div class="scanline"></div>
 
-    <div id="alert-container" class="fixed top-4 left-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+    <div id="alert-container" class="fixed left-4 right-4 z-50 space-y-2 pointer-events-none" style="top: calc(env(safe-area-inset-top) + 10px)"></div>
 
     <header class="p-4 border-b border-[#00ff9f]/20 bg-[#07110e] flex justify-between items-center relative z-10 flex-wrap gap-2">
         <div class="flex items-center space-x-3">
@@ -3647,7 +3647,10 @@ Kurallar:
             if (!(localState.spentXp >= 0)) localState.spentXp = 0;
             return localState;
         }
-        function walletXp() { return Math.max(0, (localState.xp || 0) - (localState.spentXp || 0)); }
+        function walletXp() {
+            // Bir kerelik: eski birikimi sıfırla, cüzdan bundan sonra kazanılanlarla dolsun (seviye değişmez)
+            if (!localState.walletResetAt && (localState.xp || 0) > 0) { localState.spentXp = localState.xp; localState.walletResetAt = getTodayStr(); }
+            return Math.max(0, (localState.xp || 0) - (localState.spentXp || 0)); }
         function renderShop() {
             shopState();
             const w = walletXp();
