@@ -962,33 +962,39 @@
         const LOCAL_STORAGE_KEY = "personaxp_solid_vault_v4";
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Yumuşak, Apple tarzı sesler: her notada kısa açılış (tık/pop yapmaz) ve doğal sönüm.
+        function softNote(freq, at, dur, vol, type = 'sine') {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(freq, at);
+            g.gain.setValueAtTime(0.0001, at);
+            g.gain.linearRampToValueAtTime(vol, at + 0.006);
+            g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+            o.connect(g); g.connect(soundOut());
+            o.start(at); o.stop(at + dur + 0.02);
+        }
+        let _soundOut = null;
+        function soundOut() {
+            if (_soundOut) return _soundOut;
+            // Hafif tiz kısma: sesi yuvarlak ve yumuşak yapar
+            const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 4200;
+            f.connect(audioCtx.destination);
+            return (_soundOut = f);
+        }
         function playSynthSound(type) {
             try {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
+                const now = audioCtx.currentTime + 0.005;
                 if (type === 'success') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, now);
-                    osc.frequency.setValueAtTime(659.25, now + 0.1);
-                    osc.frequency.setValueAtTime(783.99, now + 0.2);
-                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                    osc.start(now);
-                    osc.stop(now + 0.5);
+                    // iki notalı tatlı "ding-dong yukarı" (Sol → Re, üstte hafif oktav parıltısı)
+                    softNote(784, now, 0.35, 0.07);
+                    softNote(1175, now + 0.09, 0.55, 0.06);
+                    softNote(2350, now + 0.09, 0.25, 0.012);
                 } else if (type === 'click') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, now);
-                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
-                    gain.gain.setValueAtTime(0.06, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                    osc.start(now);
-                    osc.stop(now + 0.05);
+                    // çok kısa, kısık "tık" — perde kayması yok
+                    softNote(1400, now, 0.035, 0.025);
+                } else if (type === 'error') {
+                    softNote(330, now, 0.18, 0.05, 'triangle');
+                    softNote(262, now + 0.1, 0.25, 0.05, 'triangle');
                 }
             } catch (e) {}
         }
@@ -2133,9 +2139,29 @@
             return doc(db, 'artifacts', 'personaxp-ae8ff', 'users', uid, 'profile', 'userData');
         }
 
+        // Firestore'da bir belge en fazla 1 MiB olabilir (Google'ın sabit sınırı). Ana kayıt büyürse
+        // 120 günden eski geçmiş kayıtları ayrı arşiv belgelerine taşınır; XP ve seviye etkilenmez.
+        const DOC_LIMIT = 1048576, ARCHIVE_AT = 700 * 1024;
+        const vaultBytes = () => new Blob([JSON.stringify(localState)]).size;
+        async function archiveOldLogsIfNeeded() {
+            if (!currentUser || vaultBytes() < ARCHIVE_AT) return;
+            const cut = toLocalDateStr(new Date(Date.now() - 120 * 864e5));
+            const logs = localState.actionLogs || [];
+            const old = logs.filter(l => (l.dateStr || '') < cut), keep = logs.filter(l => (l.dateStr || '') >= cut);
+            if (!old.length) return;
+            const id = 'logs-' + Date.now();
+            for (let i = 0; i * 2500 < old.length; i++) // her arşiv belgesi de 1 MiB'ı aşmasın
+                await setDoc(doc(db, 'artifacts', 'personaxp-ae8ff', 'users', currentUser.uid, 'archive', `${id}-${i}`), { createdAt: Date.now(), until: cut, actionLogs: old.slice(i * 2500, (i + 1) * 2500) });
+            localState.actionLogs = keep;
+            localState.archivedLogCount = (localState.archivedLogCount || 0) + old.length;
+            (localState.archives ||= []).push({ id, until: cut, count: old.length });
+            writeLog(`${old.length} eski kayıt arşive taşındı (${id}).`);
+        }
+
         async function pushToCloud() {
             if (!currentUser) return;
             try {
+                await archiveOldLogsIfNeeded();
                 const safeData = JSON.parse(JSON.stringify(localState));
                 await setDoc(cloudDocRef(currentUser.uid), safeData);
                 setSyncStatus('ok');
@@ -2174,7 +2200,7 @@
         }
 
         function progressScore(st) {
-            return (st?.xp || 0) + (st?.actionLogs?.length || 0);
+            return (st?.xp || 0) + (st?.actionLogs?.length || 0) + (st?.archivedLogCount || 0);
         }
 
         async function syncCloudVault(user) {
@@ -4055,7 +4081,9 @@ Kurallar:
             info.innerHTML = currentUser
                 ? `☁️ Bulut yedeği: <strong class="text-[#00ff9f]">${esc(currentUser.email)}</strong> — ${syncState === 'ok' ? 'son durum kaydedildi ✔' : syncState === 'error' ? '<span class="text-red-400">kayıt hatası!</span>' : 'eşitleniyor...'}`
                 : `☁️ Google ile bağlı değilsin. Veriler <strong class="text-amber-300">sadece bu cihazda</strong>.`;
-            info.innerHTML += `<br>📦 Şu an: ${(localState.xp || 0).toLocaleString('tr-TR')} XP, ${(localState.actionLogs || []).length} kayıt`;
+            info.innerHTML += `<br>📦 Şu an: ${(localState.xp || 0).toLocaleString('tr-TR')} XP, ${(localState.actionLogs || []).length + (localState.archivedLogCount || 0)} kayıt`;
+            const kb = Math.round(vaultBytes() / 1024), pct = Math.round(vaultBytes() / DOC_LIMIT * 100);
+            info.innerHTML += `<br>📏 Bulut kaydı: ${kb} KB / 1024 KB (%${pct})${pct >= 68 ? ' — eski kayıtlar otomatik arşivlenecek' : ' — bol yer var'}`;
 
             const snaps = getSnapshots().slice().reverse();
             const list = document.getElementById('vault-snapshots-list');
