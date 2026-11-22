@@ -157,6 +157,8 @@
         ::-webkit-scrollbar-track { background: #050a08; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 255, 159, 0.2); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 159, 0.5); }
+            /* Açılır pencereler iPhone saat/çentik alanının altında başlasın */
+        [id$="-modal"].fixed.inset-0 { padding-top: calc(env(safe-area-inset-top) + 12px) !important; padding-bottom: calc(env(safe-area-inset-bottom) + 12px) !important; }
     </style>
 </head>
 <body class="antialiased relative min-h-screen pb-12 select-none" data-tab="tasks">
@@ -509,6 +511,10 @@
                                 <input type="number" id="manual-xp" value="30" min="10" max="100" class="w-full bg-[#050a08] border border-[#00ff9f]/20 text-[#00ff9f] rounded p-2 text-[10px] focus:ring-1 focus:ring-[#00ff9f]">
                             </div>
                         </div>
+                        <div id="manual-due-wrap" class="space-y-1">
+                            <label class="text-[9px] text-gray-400 font-bold uppercase block">⏳ Son gün — yapılmazsa 2 katı XP cüzdandan kesilir</label>
+                            <input type="date" id="manual-due" class="w-full bg-[#050a08] border border-red-500/30 text-white rounded p-2 text-[11px]">
+                        </div>
                         <div class="space-y-1">
                             <label class="text-[9px] text-gray-400 font-bold uppercase block">🌳 Yetenek (boş bırakırsan isimden tahmin edilir)</label>
                             <select id="manual-skill" class="skill-select w-full bg-[#050a08] border border-[#00ff9f]/20 text-[#00ff9f] rounded p-2 text-[10px]"></select>
@@ -830,7 +836,7 @@
                 <button id="shop-new-btn" class="w-full mt-2 py-2 bg-amber-400 text-black font-extrabold text-xs uppercase rounded">Ekle</button>
             </details>
             <div>
-                <div class="text-[10px] text-gray-400 font-bold uppercase mb-1.5">Son aldıkların</div>
+                <div class="text-[10px] text-gray-400 font-bold uppercase mb-1.5">Son hareketler</div>
                 <div id="shop-history" class="space-y-1 text-xs"></div>
             </div>
         </div>
@@ -1863,8 +1869,27 @@
             sanitizeData();
         }
         
+        // Son günü geçen, yapılmamış görev: 2 katı XP cüzdandan kesilir (seviye düşmez; cüzdan eksiye inebilir)
+        function applyOverduePenalties() {
+            const today = getTodayStr();
+            const hit = [];
+            for (const d of localState.directives || []) {
+                if (!d.due) { d.due = today; continue; } // eski görevler: bugünden itibaren sayılır
+                if (d.due < today && !d.penalized) {
+                    const pen = 2 * (d.xp || 0);
+                    d.penalized = true;
+                    localState.spentXp = (localState.spentXp || 0) + pen;
+                    if (!Array.isArray(localState.rewardLog)) localState.rewardLog = [];
+                    localState.rewardLog.push({ id: 'pn' + Date.now() + Math.random().toString(36).slice(2, 5), penalty: true, icon: '⛔', name: 'Yapılmadı: ' + d.text, cost: pen, date: today });
+                    hit.push(`"${d.text}" −${pen}`);
+                }
+            }
+            if (hit.length) setTimeout(() => triggerAlert(`⛔ Son günü geçen görev${hit.length > 1 ? 'ler' : ''}: ${esc(hit.join(', '))} XP cüzdandan kesildi.`, 'error'), 2200);
+        }
+
         function checkDailyResetsAndDecay() {
             const today = getTodayStr();
+            applyOverduePenalties();
             const safeDate = (d) => new Date(d.includes('.') ? d.split('.').reverse().join('-') : d);
             const todayDate = safeDate(today);
             todayDate.setHours(0, 0, 0, 0);
@@ -2209,7 +2234,9 @@
             document.getElementById('user-rank').innerText = `Lvl ${details.level} // Yolcu // Safha ${details.level}`;
             document.getElementById('xp-text').innerText = `${details.earnedInLevel} / ${details.neededInLevel} XP`;
             document.getElementById('xp-bar').style.width = `${details.percentage}%`;
-            document.getElementById('total-xp-display').innerText = walletXp().toLocaleString('tr-TR');
+            const wx = walletXp();
+            document.getElementById('total-xp-display').innerText = wx.toLocaleString('tr-TR');
+            document.getElementById('total-xp-display').style.color = wx < 0 ? '#f87171' : '';
             document.getElementById('remaining-xp-display').innerText = details.remaining;
 
             document.getElementById('streak-count').innerText = `🔥 ${localState.streak?.current || 0} GÜN`;
@@ -2418,6 +2445,17 @@
             updateDashboardUI();
         };
 
+        function dueChip(d) {
+            if (!d.due) return '';
+            const t = getTodayStr();
+            const tm = new Date(); tm.setDate(tm.getDate() + 1);
+            const tmr = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, '0')}-${String(tm.getDate()).padStart(2, '0')}`;
+            if (d.penalized || d.due < t) return `<span class="px-1.5 rounded bg-red-500/20 text-red-300 font-bold">⛔ GECİKTİ −${2 * d.xp}</span>`;
+            if (d.due === t) return `<span class="px-1.5 rounded bg-amber-500/15 text-amber-300 font-bold">⏳ Bugün · risk −${2 * d.xp}</span>`;
+            if (d.due === tmr) return `<span class="px-1.5 rounded border border-white/10 text-gray-300">⏳ Yarın</span>`;
+            return `<span class="px-1.5 rounded border border-white/10 text-gray-300">⏳ ${d.due.split('-').reverse().slice(0, 2).join('.')}</span>`;
+        }
+
         function renderDirectives() {
             const list = document.getElementById('directive-list');
             const count = document.getElementById('task-counter');
@@ -2438,6 +2476,7 @@
                             <span class="px-1 border border-[#00ff9f]/30 rounded">${d.cat}</span>
                             ${d.subcat ? `<span class="px-1 border border-blue-400/30 text-blue-400 rounded">${d.subcat}</span>` : ''}
                             <span>+${d.xp} XP</span>
+                            ${dueChip(d)}
                             ${skillTagHtml(d, 'task')}
                         </div>
                     </div>
@@ -2788,6 +2827,11 @@
 
             const chosenSkill = document.getElementById('manual-skill')?.value || null;
             const item = { id: Date.now(), text, cat, subcat, xp, lastCompletedDate: null, skillId: chosenSkill || guessSkill(text, cat) || null };
+            if (!isRoutine) {
+                const due = document.getElementById('manual-due').value || getTodayStr();
+                if (due < getTodayStr()) { triggerAlert("Son gün geçmiş bir tarih olamaz.", 'error'); return; }
+                item.due = due;
+            }
             if (isRoutine) {
                 if (!localState.routines) localState.routines = [];
                 localState.routines.push(item);
@@ -2797,6 +2841,7 @@
             }
 
             document.getElementById('manual-text').value = "";
+            document.getElementById('manual-due').value = getTodayStr();
             playSynthSound('click');
             await securePersistVault();
             updateDashboardUI();
@@ -3531,6 +3576,11 @@ Kurallar:
         document.getElementById('add-sheet-bg').onclick = closeAddSheet;
         document.querySelectorAll('.sheet-tab').forEach(b => b.onclick = () => setSheetTab(b.dataset.sheet));
         document.getElementById('manual-text')?.addEventListener('input', previewSkillGuess);
+        (() => {
+            const due = document.getElementById('manual-due'), cb = document.getElementById('is-routine-checkbox');
+            due.value = getTodayStr(); due.min = getTodayStr();
+            cb.addEventListener('change', () => document.getElementById('manual-due-wrap').style.display = cb.checked ? 'none' : '');
+        })();
         document.getElementById('manual-cat')?.addEventListener('change', previewSkillGuess);
         document.getElementById('manual-add-btn')?.addEventListener('click', () => { if (!document.getElementById('add-sheet').classList.contains('hidden')) setTimeout(() => { if (!document.getElementById('manual-text').value) closeAddSheet(); }, 150); });
         document.getElementById('sheet-income-add').onclick = () => {
@@ -3650,7 +3700,7 @@ Kurallar:
         function walletXp() {
             // Bir kerelik: eski birikimi sıfırla, cüzdan bundan sonra kazanılanlarla dolsun (seviye değişmez)
             if (!localState.walletResetAt && (localState.xp || 0) > 0) { localState.spentXp = localState.xp; localState.walletResetAt = getTodayStr(); }
-            return Math.max(0, (localState.xp || 0) - (localState.spentXp || 0)); }
+            return (localState.xp || 0) - (localState.spentXp || 0); }
         function renderShop() {
             shopState();
             const w = walletXp();
@@ -3672,7 +3722,7 @@ Kurallar:
             const hist = localState.rewardLog.slice(-8).reverse();
             document.getElementById('shop-history').innerHTML = hist.map(h => `<div class="flex justify-between items-center text-gray-300">
                     <span>${esc(h.icon || '🎁')} ${esc(h.name)} <span class="text-gray-500">· ${esc(h.date)}</span></span>
-                    <span class="flex items-center gap-2"><span class="font-mono text-amber-300">−${h.cost}</span><button data-undo="${h.id}" class="text-gray-500 underline">geri al</button></span>
+                    <span class="flex items-center gap-2"><span class="font-mono ${h.penalty ? 'text-red-400' : 'text-amber-300'}">−${h.cost}</span>${h.penalty ? '' : `<button data-undo="${h.id}" class="text-gray-500 underline">geri al</button>`}</span>
                 </div>`).join('') || '<div class="text-gray-500">Henüz bir şey almadın. Hak ettiğinde kendini şımart!</div>';
         }
         function celebrate(icon) {
